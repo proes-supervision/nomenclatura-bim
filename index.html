@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asistente de Nomenclatura HIS</title>
+    <!-- Carga de Tailwind CSS para el diseño -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Estilos adicionales para una apariencia más pulida */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Estilo para el prompt del ComboBox */
+        select option[value=""] {
+            color: #9ca3af; /* gris-400 */
+        }
+        /* Estilo para la opción seleccionada */
+        select {
+            color: #111827; /* gris-900 */
+        }
+        select:invalid {
+            color: #9ca3af;
+        }
+        /* Animación de entrada */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+    <div class="w-full max-w-2xl p-8 bg-white rounded-2xl shadow-xl fade-in m-4">
+        
+        <!-- Encabezado -->
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold text-gray-900">Generador de Nomenclatura BIM</h1>
+            <p class="text-lg text-gray-600 mt-1">Proyecto Hospital Isaías Oruro (HIO)</p>
+            <p class="text-sm text-gray-500 mt-2 border-l-4 border-blue-500 pl-3">Basado en el estándar ISO 19650.</p>
+        </div>
+        
+        <!-- Formulario Principal -->
+        <form id="namingForm" class="space-y-5">
+
+            <!-- 1. Proyecto (Deshabilitado) -->
+            <div>
+                <label for="proyecto" class="block text-sm font-medium text-gray-700 mb-1">1. Proyecto</label>
+                <input type="text" id="proyecto" value="HIO" readonly 
+                       class="w-full px-3 py-2 bg-gray-200 text-gray-500 border border-gray-300 rounded-md focus:outline-none cursor-not-allowed">
+            </div>
+
+            <!-- Fila de Campos: 2. Originador y 3. Disciplina -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- 2. Originador -->
+                <div>
+                    <label for="originador" class="block text-sm font-medium text-gray-700 mb-1">2. Originador</label>
+                    <select id="originador" required 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 invalid:text-gray-400">
+                        <option value="" disabled selected>Seleccione un Originador...</option>
+                        <option value="CON">CON - Constructora EROBO</option>
+                        <option value="SUP">SUP - Supervisión</option>
+                        <option value="FIS">FIS - Fiscalización</option>
+                    </select>
+                </div>
+                
+                <!-- 3. Disciplina -->
+                <div>
+                    <label for="disciplina" class="block text-sm font-medium text-gray-700 mb-1">3. Disciplina</label>
+                    <select id="disciplina" required 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 invalid:text-gray-400">
+                        <option value="" disabled selected>Seleccione una Disciplina...</option>
+                        <option value="GER">GER - Gerencia de Supervisión</option>
+                        <option value="ARQ">ARQ - Arquitectura</option>
+                        <option value="EST">EST - Estructuras</option>
+                        <option value="CLM">CLM - Climatización (HVAC)</option>
+                        <option value="IEL">ELT - Instalaciones Eléctricas</option>
+                        <option value="HID">HID - Instalaciones Hidrosanitarias</option>
+                        <option value="GMD">GMD - Gases Medicinales</option>
+                        <option value="DAT">COM - Datos y Comunicaciones</option>
+                        <option value="BIO">BIO - Biomedicina</option>
+                        <option value="GNA">GNA - Gas Natural</option>
+                        <option value="GCC">GCC - Gestión / Coordinación / Control</option>
+                        <option value="SEG">SEG - Seguridad y Medio Ambiente</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Fila de Campos: 4. Tipo Documento y 5. Número -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- 4. Tipo Documento -->
+                <div>
+                    <label for="tipo" class="block text-sm font-medium text-gray-700 mb-1">4. Tipo de Documento</label>
+                    <select id="tipo" required 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 invalid:text-gray-400">
+                        <option value="" disabled selected>Seleccione un Tipo...</option>
+                        <option value="M3D">M3D - Modelo 3D (RVT, IFC...)</option>
+                        <option value="M2D">M2D - Plano 2D (PDF, DWG...)</option>
+                        <option value="INF">INF - Informe Técnico (PDF, DOCX...)</option>
+                        <option value="NOT">NOT - Nota (PDF, DOCX...)</option>
+                        <option value="ESP">ESP - Especificación Técnica</option>
+                        <option value="CAL">CAL - Memoria de Cálculo</option>
+                        <option value="COM">COM - Cómputo Métrico</option>
+                        <option value="PRE">PRE - Presupuesto</option>
+                        <option value="CRO">CRO - Cronograma</option>
+                        <option value="ACT">ACT - Acta / Minuta</option>
+                        <option value="IMG">IMG - Imagen / Fotografía</option>
+                    </select>
+                </div>
+
+                <!-- 5. Número -->
+                <div>
+                    <label for="numero" class="block text-sm font-medium text-gray-700 mb-1">5. Número Secuencial (Único)</label>
+                    <input type="number" id="numero" required min="1" max="9999" placeholder="Ej: 0006"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400">
+                    <p class="mt-1 text-xs text-gray-500">
+                        p. ej: 0006. El total (ej. "de 10 planos") se gestiona en un Listado de Documentos, no en el nombre.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Fila de Campos: 6. Revisión y 7. Fecha -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- 6. Revisión (Híbrido) -->
+                <div>
+                    <label for="revisionTipo" class="block text-sm font-medium text-gray-700 mb-1">6. Revisión (Tipo y Número)</label>
+                    <div class="flex gap-2">
+                        <select id="revisionTipo" required 
+                                class="w-2/5 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 invalid:text-gray-400">
+                            <option value="" disabled selected>Tipo...</option>
+                            <option value="P">P - Preliminar</option>
+                            <option value="C">C - Para Construcción</option>
+                            <option value="A">A - As-Built</option>
+                        </select>
+                        <input type="number" id="revisionNumero" required min="1" max="99" placeholder="Nro (ej: 1)"
+                               class="w-3/5 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400">
+                    </div>
+                </div>
+
+                <!-- 7. Fecha -->
+                <div>
+                    <label for="fecha" class="block text-sm font-medium text-gray-700 mb-1">7. Fecha</label>
+                    <input type="date" id="fecha" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-500">
+                </div>
+            </div>
+
+            <!-- Separador -->
+            <hr class="my-6">
+
+            <!-- Resultado y Botón de Copiar -->
+            <div class_="">
+                <label for="resultado" class="block text-sm font-medium text-gray-700 mb-1">ID de Contenedor Único (Haga clic para copiar)</label>
+                <div class="relative">
+                    <input type="text" id="resultado" readonly 
+                           class="w-full px-3 py-3 bg-gray-200 text-gray-500 border border-gray-300 rounded-md font-mono text-lg cursor-not-allowed focus:outline-none"
+                           placeholder="HIS-CON-BLQ-N01-D2D-ARQ-0001">
+                    <button type="button" id="copyButton" title="Copiar al portapapeles"
+                            class="absolute inset-y-0 right-0 flex items-center px-4 text-gray-300 cursor-not-allowed transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                    </button>
+                </div>
+                <!-- Mensaje de copiado -->
+                <p id="copyMessage" class="text-sm text-green-600 mt-1 h-4"></p> 
+            </div>
+
+            <!-- Botón de Limpiar -->
+            <div class="pt-2">
+                 <button type="button" id="resetButton" 
+                        class="w-full px-4 py-2 bg-gray-600 text-white font-medium rounded-md shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
+                    Limpiar Formulario
+                </button>
+            </div>
+
+            <!-- PIE DE PÁGINA AÑADIDO -->
+            <div class="text-center mt-6 pt-4 border-t border-gray-200">
+                <p class="text-xs text-gray-400">
+                    Herramienta desarrollada por Zacarías Ortega para el Proyecto Hospital Isaías.
+                </p>
+            </div>
+            <!-- FIN DEL PIE DE PÁGINA -->
+
+        </form>
+    </div>
+
+    <!-- Lógica de JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // Referencias a elementos del DOM
+            const form = document.getElementById('namingForm');
+            const resultadoInput = document.getElementById('resultado');
+            const copyButton = document.getElementById('copyButton');
+            const copyMessage = document.getElementById('copyMessage');
+            const resetButton = document.getElementById('resetButton');
+
+            // Lista de todos los campos de entrada
+            const inputs = {
+                proyecto: document.getElementById('proyecto'),
+                originador: document.getElementById('originador'),
+                disciplina: document.getElementById('disciplina'),
+                tipo: document.getElementById('tipo'),
+                numero: document.getElementById('numero'),
+                revisionTipo: document.getElementById('revisionTipo'),
+                revisionNumero: document.getElementById('revisionNumero'),
+                fecha: document.getElementById('fecha')
+            };
+
+            // --- INICIO DE LÓGICA MODIFICADA ---
+
+            // Función para validar si el formulario está completo
+            const isFormValid = () => {
+                const allSelected = Object.keys(inputs)
+                    .filter(k => k !== 'proyecto' && k !== 'numero' && k !== 'fecha' && k !== 'revisionNumero') // Validar todos los 'select'
+                    .every(key => inputs[key].value);
+                
+                const numValue = inputs.numero.value;
+                const numValid = numValue && parseInt(numValue, 10) > 0;
+
+                const revNumValue = inputs.revisionNumero.value;
+                const revNumValid = revNumValue && parseInt(revNumValue, 10) > 0;
+
+                const fechaValid = !!inputs.fecha.value; // Asegura que la fecha no esté vacía
+
+                return allSelected && numValid && fechaValid && revNumValid;
+            };
+
+            // Función para generar el nombre de archivo (con vista previa)
+            const generateName = () => {
+                const numValue = inputs.numero.value;
+                const numValid = numValue && parseInt(numValue, 10) > 0;
+                
+                const revNumValue = inputs.revisionNumero.value;
+                const revNumValid = revNumValue && parseInt(revNumValue, 10) > 0;
+
+                // Formatear fecha (YYYY-MM-DD -> YYYYMMDD)
+                const fechaValue = inputs.fecha.value;
+                const fechaFormateada = fechaValue ? fechaValue.replace(/-/g, '') : 'YYYYMMDD';
+
+                // 1. Construir el nombre con marcadores de posición
+                const nombre = [
+                    inputs.proyecto.value,
+                    inputs.originador.value || '???',
+                    inputs.disciplina.value || '???',
+                    inputs.tipo.value || '???',
+                    (numValid ? String(numValue).padStart(4, '0') : '0000'),
+                    (inputs.revisionTipo.value || 'R?') + (revNumValid ? String(revNumValue).padStart(2, '0') : '??'),
+                    fechaFormateada
+                ].join('-'); 
+
+                resultadoInput.value = nombre;
+
+                // 2. Comprobar validez para cambiar estilos
+                if (isFormValid()) {
+                    // Habilitar visualmente
+                    resultadoInput.classList.remove('bg-gray-200', 'text-gray-500', 'cursor-not-allowed');
+                    resultadoInput.classList.add('bg-gray-100', 'text-gray-800', 'cursor-pointer');
+                    copyButton.classList.remove('text-gray-300', 'cursor-not-allowed');
+                    copyButton.classList.add('text-gray-500', 'hover:text-blue-600');
+                } else {
+                    // Deshabilitar visualmente
+                    resultadoInput.classList.add('bg-gray-200', 'text-gray-500', 'cursor-not-allowed');
+                    resultadoInput.classList.remove('bg-gray-100', 'text-gray-800', 'cursor-pointer');
+                    copyButton.classList.add('text-gray-300', 'cursor-not-allowed');
+                    copyButton.classList.remove('text-gray-500', 'hover:text-blue-600');
+                }
+            };
+
+            // Función para copiar al portapapeles (solo si es válido)
+            const copyToClipboard = () => {
+                // 1. Validar antes de copiar
+                if (!isFormValid()) {
+                    showCopyMessage('Complete todos los campos', true);
+                    return;
+                }
+                
+                const textToCopy = resultadoInput.value;
+                if (!textToCopy) return;
+
+                try {
+                    // Método moderno (navigator) - preferido
+                    navigator.clipboard.writeText(textToCopy).then(() => {
+                        showCopyMessage('¡Copiado!');
+                    }).catch(err => {
+                        // Método de respaldo (execCommand) para iframes/entornos restrictivos
+                        fallbackCopyTextToClipboard(textToCopy);
+                    });
+                } catch (err) {
+                    // Fallback si navigator no existe
+                    fallbackCopyTextToClipboard(textToCopy);
+                }
+            };
+
+            // Método de respaldo para copiar
+            const fallbackCopyTextToClipboard = (text) => {
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.position = "fixed"; 
+                textArea.style.top = "0";
+                textArea.style.left = "0";
+                textArea.style.opacity = "0";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+
+                try {
+                    const successful = document.execCommand('copy');
+                    if (successful) {
+                        showCopyMessage('¡Copiado! (Fallback)');
+                    } else {
+                        showCopyMessage('Error al copiar', true);
+                    }
+                } catch (err) {
+                    showCopyMessage('Error al copiar', true);
+                }
+
+                document.body.removeChild(textArea);
+            };
+
+            // Función para mostrar el mensaje de copiado
+            const showCopyMessage = (message, isError = false) => {
+                copyMessage.textContent = message;
+                copyMessage.className = isError 
+                    ? 'text-sm text-red-600 mt-1 h-4' 
+                    : 'text-sm text-green-600 mt-1 h-4';
+                
+                // Borrar mensaje después de 2 segundos
+                setTimeout(() => {
+                    copyMessage.textContent = '';
+                }, 2000);
+            };
+
+            // Función para limpiar el formulario
+            const resetForm = () => {
+                form.reset();
+                // Resetear el color de los 'select' y la fecha
+                Object.values(inputs).forEach(input => {
+                    if (input.tagName === 'SELECT' || input.type === 'date') {
+                        input.style.color = ''; 
+                    }
+                });
+                generateName(); // <--- Llamar a generateName para resetear el resultado
+                copyMessage.textContent = '';
+                // Poner foco en el primer campo
+                inputs.originador.focus();
+            };
+
+            // === Asignación de Eventos ===
+
+            // 1. Generar nombre automáticamente al cambiar cualquier campo
+            Object.values(inputs).forEach(input => {
+                input.addEventListener('change', generateName);
+                input.addEventListener('keyup', generateName); 
+            });
+
+            // 2. Copiar al hacer clic en el botón o en el campo de resultado
+            copyButton.addEventListener('click', copyToClipboard);
+            resultadoInput.addEventListener('click', copyToClipboard);
+
+            // 3. Limpiar el formulario
+            resetButton.addEventListener('click', resetForm);
+
+            // 4. Cambiar color del 'select' y 'date' al elegir una opción
+             Object.values(inputs).forEach(input => {
+                if (input.tagName === 'SELECT' || input.type === 'date') {
+                    input.addEventListener('change', (e) => {
+                        e.target.style.color = '#111827'; // gris-900
+                    });
+                }
+            });
+
+            // 5. Generar el nombre inicial al cargar la página
+            generateName();
+
+            // --- FIN DE LÓGICA MODIFICADA ---
+
+        });
+    </script>
+</body>
+</html>
+
+
+
+

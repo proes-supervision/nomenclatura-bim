@@ -1,48 +1,41 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asistente de Nomenclatura HIS</title>
-    <!-- Carga de Tailwind CSS para el diseño -->
+    <title>Generador de Nomenclatura - HIO</title>
+    <!-- Carga de Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Estilos adicionales para una apariencia más pulida */
-        body {
-            font-family: 'Inter', sans-serif;
+        /* Estilo para navegadores que no soportan :invalid (como Safari en iOS < 16.4) */
+        select:required:invalid {
+            color: #6b7280; /* text-gray-500 */
         }
-        /* Estilo para el prompt del ComboBox */
-        select option[value=""] {
-            color: #9ca3af; /* gris-400 */
+        /* Estilo para el placeholder del input de fecha */
+        input[type="date"]:required:invalid::-webkit-datetime-edit {
+            color: #6b7280;
         }
-        /* Estilo para la opción seleccionada */
-        select {
-            color: #111827; /* gris-900 */
+        /* Spinner de carga (oculto por defecto) */
+        .spinner {
+            border-top-color: #3498db;
+            animation: spin 1s linear infinite;
         }
-        select:invalid {
-            color: #9ca3af;
-        }
-        /* Animación de entrada */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .fade-in {
-            animation: fadeIn 0.5s ease-out forwards;
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+<body class="bg-gray-100 flex items-center justify-center min-h-full py-10 font-sans">
 
-    <div class="w-full max-w-2xl p-8 bg-white rounded-2xl shadow-xl fade-in m-4">
-        
+    <div class="w-full max-w-2xl mx-auto bg-white rounded-xl shadow-2xl p-8 md:p-10">
+
         <!-- Encabezado -->
         <div class="mb-6">
-            <h1 class="text-3xl font-bold text-gray-900">Generador de Nomenclatura BIM</h1>
-            <p class="text-lg text-gray-600 mt-1">Construcción Hospital Isaías Oruro (HIO)</p>
+            <h1 class="text-3xl font-bold text-gray-900">Registro de Nomenclatura</h1>
+            <p class="text-lg text-gray-600 mt-1">Hospital de 2do. Nivel Isaías - Oruro (HIO)</p>
             <p class="text-sm text-gray-500 mt-2 border-l-4 border-blue-500 pl-3">Basado en el estándar ISO 19650.</p>
         </div>
-        
+
         <!-- Formulario Principal -->
         <form id="namingForm" class="space-y-5">
 
@@ -81,10 +74,11 @@
                         <option value="HID">HID - Instalaciones Hidrosanitarias</option>
                         <option value="GMD">GMD - Gases Medicinales</option>
                         <option value="COM">COM - Datos y Comunicaciones</option>
-                        <option value="BIO">BIO - Biomedicina</option>
+                        <option value="BIO">BIO - Biomédico</option>
                         <option value="GNA">GNA - Gas Natural</option>
                         <option value="GCC">GCC - Gestión / Coordinación / Control</option>
-                        <option value="SEG">SEG - Seguridad y Medio Ambiente</option>
+                        <option value="SSO">SSO - Seguridad y Salud Ocupacional</option>
+                        <option value="MED">MED - Medio Ambiente</option>
                     </select>
                 </div>
             </div>
@@ -99,7 +93,7 @@
                         <option value="" disabled selected>Seleccione un Tipo...</option>
                         <option value="M3D">M3D - Modelo 3D (RVT, IFC...)</option>
                         <option value="M2D">M2D - Plano 2D (PDF, DWG...)</option>
-                        <option value="INF">INF - Informe Técnico (PDF, DOCX...)</option>
+                        <option value="INF">INF - Informe Técnico</option>
                         <option value="NOT">NOT - Nota (PDF, DOCX...)</option>
                         <option value="ESP">ESP - Especificación Técnica</option>
                         <option value="CAL">CAL - Memoria de Cálculo</option>
@@ -117,7 +111,7 @@
                     <input type="number" id="numero" required min="1" max="9999" placeholder="Ej: 0006"
                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400">
                     <p class="mt-1 text-xs text-gray-500">
-                        p. ej: 0006. El total (ej. "de 10 planos") se gestiona en un Listado de Documentos, no en el nombre.
+                        p. ej: 0006. Número único para este documento. Consulte el Registro para asignar el siguiente.
                     </p>
                 </div>
             </div>
@@ -148,58 +142,80 @@
                 </div>
             </div>
 
-            <!-- Separador -->
-            <hr class="my-6">
-
-            <!-- Resultado y Botón de Copiar -->
-            <div class_="">
-                <label for="resultado" class="block text-sm font-medium text-gray-700 mb-1">ID de Contenedor Único (Haga clic para copiar)</label>
-                <div class="relative">
-                    <input type="text" id="resultado" readonly 
-                           class="w-full px-3 py-3 bg-gray-200 text-gray-500 border border-gray-300 rounded-md font-mono text-lg cursor-not-allowed focus:outline-none"
-                           placeholder="HIS-CON-BLQ-N01-D2D-ARQ-0001">
-                    <button type="button" id="copyButton" title="Copiar al portapapeles"
-                            class="absolute inset-y-0 right-0 flex items-center px-4 text-gray-300 cursor-not-allowed transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                        </svg>
-                    </button>
-                </div>
-                <!-- Mensaje de copiado -->
-                <p id="copyMessage" class="text-sm text-green-600 mt-1 h-4"></p> 
-            </div>
-
-            <!-- Botón de Limpiar -->
-            <div class="pt-2">
-                 <button type="button" id="resetButton" 
-                        class="w-full px-4 py-2 bg-gray-600 text-white font-medium rounded-md shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
-                    Limpiar Formulario
-                </button>
-            </div>
-
-            <!-- PIE DE PÁGINA AÑADIDO -->
-            <div class="text-center mt-6 pt-4 border-t border-gray-200">
-                <p class="text-xs text-gray-400">
-                    Herramienta desarrollada por Zacarías Ortega para el Proyecto Hospital Isaías.
+            <!-- NUEVO CAMPO: Subespecialidad -->
+             <div>
+                <label for="subespecialidad" class="block text-sm font-medium text-gray-700 mb-1">
+                    Subespecialidad (Opcional)
+                </label>
+                <input type="text" id="subespecialidad" 
+                       placeholder="Ej: Iluminación, Puesta a Tierra, Cimentaciones..."
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400">
+                <p class="mt-1 text-xs text-gray-500">
+                    Detalle opcional para el registro. No forma parte del nombre del archivo.
                 </p>
             </div>
-            <!-- FIN DEL PIE DE PÁGINA -->
+
+            <!-- Separador -->
+            <div class="pt-2">
+                <hr class="border-gray-200">
+            </div>
+
+            <!-- SECCIÓN 1: RESULTADO (ID DE ARCHIVO) -->
+            <div>
+                <label for="resultado" class="block text-sm font-medium text-gray-700 mb-1">ID de Contenedor Único (Nombre de Archivo)</label>
+                <input type="text" id="resultado" readonly
+                       class="w-full px-3 py-3 bg-gray-200 text-gray-600 border border-gray-300 rounded-md focus:outline-none font-mono text-lg cursor-not-allowed">
+                <!-- Mensaje de copiado -->
+                <p id="copyMessage" class="text-sm text-green-600 font-semibold mt-2 opacity-0 transition-opacity duration-300">
+                    ¡Nombre copiado al portapapeles!
+                </p>
+            </div>
+
+            <!-- Botón de Copiar Nombre (ID) -->
+            <button type="button" id="copyButton"
+                    class="w-full flex justify-center items-center gap-2 px-4 py-3 bg-indigo-300 text-white font-semibold rounded-md shadow-md transition-all duration-200 ease-in-out cursor-not-allowed"
+                    disabled>
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M7 2a2 2 0 00-2 2v12a2 2 0 002 2h6a2 2 0 002-2V4a2 2 0 00-2-2H7z"></path><path d="M10.5 1.5a1.5 1.5 0 00-3 0V3h3V1.5z"></path></svg>
+                Copiar Nombre de Archivo
+            </button>
+        
+            <!-- SECCIÓN 2: REGISTRO EN GOOGLE SHEETS (¡NUEVO!) -->
+            <div class="pt-5 mt-5 border-t border-gray-200">
+                <label class="block text-lg font-semibold text-gray-700 mb-2">
+                    Registro Centralizado
+                </label>
+                <p class="text-sm text-gray-500 mb-3">
+                    Tras copiar el nombre, regístrelo en la base de datos central de Google Sheets.
+                </p>
+                
+                <button type="button" id="registerButton"
+                        class="w-full flex justify-center items-center gap-3 px-4 py-3 bg-teal-300 text-white font-bold rounded-md shadow-md transition-all duration-200 ease-in-out cursor-not-allowed"
+                        disabled>
+                    <!-- Spinner de carga, oculto por defecto -->
+                    <div id="loadingSpinner" class="spinner w-5 h-5 border-4 border-t-4 border-white rounded-full hidden"></div>
+                    <span id="registerButtonText">Registrar en Google Sheet</span>
+                </button>
+                
+                <!-- Mensaje de estado del registro -->
+                <p id="registerMessage" class="text-sm text-center font-semibold mt-2 h-5"></p>
+            </div>
 
         </form>
+
+        <!-- Pie de página -->
+        <p class="text-center text-xs text-gray-400 mt-6">
+            Herramienta desarrollada por Zacarias Ortega para el Proyecto Hospital de 2do. Nivel Isaías - Oruro.
+        </p>
     </div>
 
-    <!-- Lógica de JavaScript -->
+    <!-- Lógica de la aplicación -->
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            
-            // Referencias a elementos del DOM
-            const form = document.getElementById('namingForm');
-            const resultadoInput = document.getElementById('resultado');
-            const copyButton = document.getElementById('copyButton');
-            const copyMessage = document.getElementById('copyMessage');
-            const resetButton = document.getElementById('resetButton');
+        // ¡NO OLVIDE PEGAR SU URL AQUÍ!
+        // Siga la "guia_paso_a_paso.md" (Parte 3, Paso 13) para obtener esta URL.
+        const googleAppScriptURL = "AQUÍ_PEGAS_LA_URL_DE_APPS_SCRIPT";
 
-            // Lista de todos los campos de entrada
+        document.addEventListener('DOMContentLoaded', () => {
+            // Referencias a todos los elementos interactivos
             const inputs = {
                 proyecto: document.getElementById('proyecto'),
                 originador: document.getElementById('originador'),
@@ -208,16 +224,36 @@
                 numero: document.getElementById('numero'),
                 revisionTipo: document.getElementById('revisionTipo'),
                 revisionNumero: document.getElementById('revisionNumero'),
-                fecha: document.getElementById('fecha')
+                fecha: document.getElementById('fecha'),
+                subespecialidad: document.getElementById('subespecialidad') // ¡NUEVO CAMPO!
             };
 
-            // --- INICIO DE LÓGICA MODIFICADA ---
+            const resultadoInput = document.getElementById('resultado');
+            const copyButton = document.getElementById('copyButton');
+            const copyMessage = document.getElementById('copyMessage');
+            
+            // Nuevos elementos de Registro
+            const registerButton = document.getElementById('registerButton');
+            const registerButtonText = document.getElementById('registerButtonText');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const registerMessage = document.getElementById('registerMessage');
+
+
+            // --- LÓGICA PRINCIPAL ---
+            
+            // Función auxiliar para obtener el TEXTO de un <select>
+            const getSelectedText = (el) => {
+                if (!el || el.selectedIndex === -1 || el.selectedIndex === 0) {
+                    return null; 
+                }
+                return el.options[el.selectedIndex].text;
+            };
 
             // Función para validar si el formulario está completo
             const isFormValid = () => {
-                const allSelected = Object.keys(inputs)
-                    .filter(k => k !== 'proyecto' && k !== 'numero' && k !== 'fecha' && k !== 'revisionNumero') // Validar todos los 'select'
-                    .every(key => inputs[key].value);
+                // Validar todos los 'select'
+                const allSelected = [inputs.originador, inputs.disciplina, inputs.tipo, inputs.revisionTipo]
+                    .every(el => el.value);
                 
                 const numValue = inputs.numero.value;
                 const numValid = numValue && parseInt(numValue, 10) > 0;
@@ -230,17 +266,18 @@
                 return allSelected && numValid && fechaValid && revNumValid;
             };
 
-            // Función para generar el nombre de archivo (con vista previa)
-            const generateName = () => {
+            // Función para formatear el nombre de archivo (con vista previa)
+            const getGeneratedName = () => {
                 const numValue = inputs.numero.value;
                 const numValid = numValue && parseInt(numValue, 10) > 0;
                 
                 const revNumValue = inputs.revisionNumero.value;
                 const revNumValid = revNumValue && parseInt(revNumValue, 10) > 0;
 
-                // Formatear fecha (YYYY-MM-DD -> YYYYMMDD)
                 const fechaValue = inputs.fecha.value;
                 const fechaFormateada = fechaValue ? fechaValue.replace(/-/g, '') : 'YYYYMMDD';
+                
+                const revisionFormateada = (inputs.revisionTipo.value || 'R?') + (revNumValid ? String(revNumValue).padStart(2, '0') : '??');
 
                 // 1. Construir el nombre con marcadores de posición
                 const nombre = [
@@ -249,141 +286,171 @@
                     inputs.disciplina.value || '???',
                     inputs.tipo.value || '???',
                     (numValid ? String(numValue).padStart(4, '0') : '0000'),
-                    (inputs.revisionTipo.value || 'R?') + (revNumValid ? String(revNumValue).padStart(2, '0') : '??'),
+                    revisionFormateada,
                     fechaFormateada
                 ].join('-'); 
 
+                return { nombre, numValid, revNumValid, fechaFormateada, revisionFormateada };
+            };
+
+            // Función para actualizar la UI (se llama con cada input)
+            const updateUI = () => {
+                const { nombre } = getGeneratedName();
+                
                 resultadoInput.value = nombre;
+                const formIsValid = isFormValid();
 
-                // 2. Comprobar validez para cambiar estilos
-                if (isFormValid()) {
-                    // Habilitar visualmente
-                    resultadoInput.classList.remove('bg-gray-200', 'text-gray-500', 'cursor-not-allowed');
-                    resultadoInput.classList.add('bg-gray-100', 'text-gray-800', 'cursor-pointer');
-                    copyButton.classList.remove('text-gray-300', 'cursor-not-allowed');
-                    copyButton.classList.add('text-gray-500', 'hover:text-blue-600');
+                // 3. Comprobar validez para cambiar estilos de botones
+                if (formIsValid) {
+                    // Activar botón de Copiar
+                    copyButton.disabled = false;
+                    copyButton.classList.remove('bg-indigo-300', 'cursor-not-allowed');
+                    copyButton.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
+                    
+                    // Activar botón de Registrar
+                    registerButton.disabled = false;
+                    registerButton.classList.remove('bg-teal-300', 'cursor-not-allowed');
+                    registerButton.classList.add('bg-teal-600', 'hover:bg-teal-700');
+
+                    // Resaltar resultado
+                    resultadoInput.classList.remove('text-gray-600', 'bg-gray-200', 'cursor-not-allowed');
+                    resultadoInput.classList.add('text-gray-900', 'bg-blue-50');
                 } else {
-                    // Deshabilitar visualmente
-                    resultadoInput.classList.add('bg-gray-200', 'text-gray-500', 'cursor-not-allowed');
-                    resultadoInput.classList.remove('bg-gray-100', 'text-gray-800', 'cursor-pointer');
-                    copyButton.classList.add('text-gray-300', 'cursor-not-allowed');
-                    copyButton.classList.remove('text-gray-500', 'hover:text-blue-600');
+                    // Desactivar botón de Copiar
+                    copyButton.disabled = true;
+                    copyButton.classList.add('bg-indigo-300', 'cursor-not-allowed');
+                    copyButton.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
+                    
+                    // Desactivar botón de Registrar
+                    registerButton.disabled = true;
+                    registerButton.classList.add('bg-teal-300', 'cursor-not-allowed');
+                    registerButton.classList.remove('bg-teal-600', 'hover:bg-teal-700');
+
+                    // Apagar resultado
+                    resultadoInput.classList.add('text-gray-600', 'bg-gray-200', 'cursor-not-allowed');
+                    resultadoInput.classList.remove('text-gray-900', 'bg-blue-50');
                 }
             };
 
-            // Función para copiar al portapapeles (solo si es válido)
-            const copyToClipboard = () => {
-                // 1. Validar antes de copiar
-                if (!isFormValid()) {
-                    showCopyMessage('Complete todos los campos', true);
-                    return;
-                }
-                
-                const textToCopy = resultadoInput.value;
-                if (!textToCopy) return;
+            // --- MANEJADORES DE EVENTOS ---
 
-                try {
-                    // Método moderno (navigator) - preferido
-                    navigator.clipboard.writeText(textToCopy).then(() => {
-                        showCopyMessage('¡Copiado!');
-                    }).catch(err => {
-                        // Método de respaldo (execCommand) para iframes/entornos restrictivos
-                        fallbackCopyTextToClipboard(textToCopy);
-                    });
-                } catch (err) {
-                    // Fallback si navigator no existe
-                    fallbackCopyTextToClipboard(textToCopy);
-                }
-            };
-
-            // Método de respaldo para copiar
-            const fallbackCopyTextToClipboard = (text) => {
-                const textArea = document.createElement("textarea");
-                textArea.value = text;
-                textArea.style.position = "fixed"; 
-                textArea.style.top = "0";
-                textArea.style.left = "0";
-                textArea.style.opacity = "0";
-                document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
-
-                try {
-                    const successful = document.execCommand('copy');
-                    if (successful) {
-                        showCopyMessage('¡Copiado! (Fallback)');
-                    } else {
-                        showCopyMessage('Error al copiar', true);
-                    }
-                } catch (err) {
-                    showCopyMessage('Error al copiar', true);
-                }
-
-                document.body.removeChild(textArea);
-            };
-
-            // Función para mostrar el mensaje de copiado
-            const showCopyMessage = (message, isError = false) => {
-                copyMessage.textContent = message;
-                copyMessage.className = isError 
-                    ? 'text-sm text-red-600 mt-1 h-4' 
-                    : 'text-sm text-green-600 mt-1 h-4';
-                
-                // Borrar mensaje después de 2 segundos
-                setTimeout(() => {
-                    copyMessage.textContent = '';
-                }, 2000);
-            };
-
-            // Función para limpiar el formulario
-            const resetForm = () => {
-                form.reset();
-                // Resetear el color de los 'select' y la fecha
-                Object.values(inputs).forEach(input => {
-                    if (input.tagName === 'SELECT' || input.type === 'date') {
-                        input.style.color = ''; 
-                    }
-                });
-                generateName(); // <--- Llamar a generateName para resetear el resultado
-                copyMessage.textContent = '';
-                // Poner foco en el primer campo
-                inputs.originador.focus();
-            };
-
-            // === Asignación de Eventos ===
-
-            // 1. Generar nombre automáticamente al cambiar cualquier campo
+            // 1. Escuchadores de eventos para actualizar en tiempo real
             Object.values(inputs).forEach(input => {
-                input.addEventListener('change', generateName);
-                input.addEventListener('keyup', generateName); 
+                input.addEventListener('input', updateUI);
+                input.addEventListener('change', updateUI);
             });
 
-            // 2. Copiar al hacer clic en el botón o en el campo de resultado
-            copyButton.addEventListener('click', copyToClipboard);
-            resultadoInput.addEventListener('click', copyToClipboard);
+            // 2. Lógica de copiado para el Nombre (ID)
+            copyButton.addEventListener('click', () => {
+                if (!isFormValid()) return;
+                
+                resultadoInput.select();
+                resultadoInput.setSelectionRange(0, 99999);
+                
+                try {
+                    document.execCommand('copy');
+                    copyMessage.innerText = "¡Nombre copiado al portapapeles!";
+                    copyMessage.classList.remove('opacity-0', 'text-red-600');
+                    copyMessage.classList.add('opacity-100', 'text-green-600');
+                    setTimeout(() => {
+                        copyMessage.classList.remove('opacity-100');
+                        copyMessage.classList.add('opacity-0');
+                    }, 2000);
 
-            // 3. Limpiar el formulario
-            resetButton.addEventListener('click', resetForm);
+                } catch (err) {
+                    console.error('Error al copiar el nombre: ', err);
+                }
+                window.getSelection().removeAllRanges();
+            });
+
+            // 3. Lógica de REGISTRO en Google Sheets (¡NUEVO!)
+            registerButton.addEventListener('click', async (e) => {
+                e.preventDefault(); // Prevenir que el formulario se envíe
+                
+                if (!isFormValid()) {
+                    registerMessage.innerText = "Complete todos los campos primero.";
+                    registerMessage.className = "text-sm text-center font-semibold mt-2 h-5 text-red-600";
+                    return;
+                }
+
+                if (googleAppScriptURL === "AQUÍ_PEGAS_LA_URL_DE_APPS_SCRIPT") {
+                    alert("Error de configuración: La URL de Google Apps Script no ha sido configurada en el archivo index.html.");
+                    return;
+                }
+
+                // Mostrar estado de carga
+                registerButtonText.innerText = "Registrando...";
+                loadingSpinner.classList.remove('hidden');
+                registerButton.disabled = true;
+                registerMessage.innerText = "";
+
+                // Obtener los datos del formulario
+                const { nombre, fechaFormateada, revisionFormateada } = getGeneratedName();
+                
+                const formData = {
+                    nombreCompleto: nombre,
+                    proyecto: inputs.proyecto.value,
+                    originador: inputs.originador.value,
+                    disciplina: inputs.disciplina.value,
+                    tipo: inputs.tipo.value,
+                    numero: String(inputs.numero.value).padStart(4, '0'),
+                    revision: revisionFormateada,
+                    fecha: fechaFormateada,
+                    subespecialidad: inputs.subespecialidad.value || "" // Enviar vacío si no se llena
+                };
+
+                // Enviar los datos al Google Apps Script
+                try {
+                    const response = await fetch(googleAppScriptURL, {
+                        method: 'POST',
+                        mode: 'cors', // Necesario para peticiones cross-origin
+                        headers: {
+                            'Content-Type': 'text/plain;charset=utf-8', // Apps Script a menudo prefiere text/plain
+                        },
+                        body: JSON.stringify(formData)
+                    });
+
+                    const result = await response.json();
+
+                    if (result.status === 'success') {
+                        registerMessage.innerText = "¡Registrado con éxito!";
+                        registerMessage.className = "text-sm text-center font-semibold mt-2 h-5 text-green-600";
+                    } else {
+                        throw new Error(result.message);
+                    }
+
+                } catch (error) {
+                    console.error('Error al registrar en Google Sheet:', error);
+                    registerMessage.innerText = "Error al registrar. Revise la consola.";
+                    registerMessage.className = "text-sm text-center font-semibold mt-2 h-5 text-red-600";
+                } finally {
+                    // Ocultar estado de carga
+                    registerButtonText.innerText = "Registrar en Google Sheet";
+                    loadingSpinner.classList.add('hidden');
+                    registerButton.disabled = false;
+                }
+            });
+
 
             // 4. Cambiar color del 'select' y 'date' al elegir una opción
              Object.values(inputs).forEach(input => {
                 if (input.tagName === 'SELECT' || input.type === 'date') {
                     input.addEventListener('change', (e) => {
-                        e.target.style.color = '#111827'; // gris-900
+                        if (e.target.value) {
+                            e.target.style.color = '#111827'; // gris-900
+                        } else {
+                             e.target.style.color = '#6b7280'; // gris-500
+                        }
                     });
                 }
             });
 
-            // 5. Generar el nombre inicial al cargar la página
-            generateName();
-
-            // --- FIN DE LÓGICA MODIFICADA ---
-
+            // 5. Generar el estado inicial al cargar la página
+            updateUI();
         });
     </script>
 </body>
 </html>
-
 
 
 

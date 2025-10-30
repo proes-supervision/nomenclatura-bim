@@ -4,7 +4,7 @@ CAMBIO CLAVE: La función registerData() (aprox. Línea 450)
 ha sido modificada.
 1. Ya NO envía 'claveAcceso' en el payload.
 2. Ahora envía 'nombreRegistrador' (que obtuvo del doGet) en el payload.
-Esto permite que el script v12 sea mucho más rápido y evite el timeout.
+Esto soluciona el error que está viendo.
 -->
 <!DOCTYPE html>
 <html lang="es">
@@ -222,7 +222,7 @@ Esto permite que el script v12 sea mucho más rápido y evite el timeout.
         document.addEventListener('DOMContentLoaded', () => {
 
             // --- CONEXIÓN AL BACK-END ---
-            const googleAppScriptURL = "https://script.google.com/macros/s/AKfycbxSjEUaROYSueif6pA4bJxnFlxdDF-21y9lG_qYu09J6KtK3WmWdS93plI6sgL_22X8w/exec";
+            const googleAppScriptURL = "https://script.google.com/macros/s/AKfycbxSjEUaROYSueif6pA4bJxnFlxdDF-21yqlG_qYu09J6KtK3WmWdS593plI6sgL_22X8w/exec";
 
             // --- REFERENCIAS A ELEMENTOS ---
             const form = document.getElementById('namingForm');
@@ -535,3 +535,4 @@ Esto permite que el script v12 sea mucho más rápido y evite el timeout.
     </script>
 </body>
 </html>
+

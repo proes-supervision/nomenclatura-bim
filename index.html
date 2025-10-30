@@ -1,20 +1,21 @@
 <!--
-v11 - SOLUCIÓN "FAILED TO FETCH"
-CAMBIO CLAVE: En la función fetch() (aprox. Línea 470), el encabezado
-'Content-Type' se ha cambiado de 'application/json' a 'text/plain'.
-Esto convierte la solicitud en una "solicitud simple" y evita
-el error de "pre-flight" (OPTIONS) de CORS que estaba fallando.
+v12 - SOLUCIÓN DE CONGELAMIENTO
+CAMBIO CLAVE: La función registerData() (aprox. Línea 450)
+ha sido modificada.
+1. Ya NO envía 'claveAcceso' en el payload.
+2. Ahora envía 'nombreRegistrador' (que obtuvo del doGet) en el payload.
+Esto permite que el script v12 sea mucho más rápido y evite el timeout.
 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador de Nomenclatura HIO (v11)</title>
+    <title>Generador de Nomenclatura HIO (v12)</title>
     <!-- Carga de Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Deshabilitar flechas en campos numéricos */
+        /* Estilos (spinner, disabled, etc.) - Sin cambios */
         input[type="number"]::-webkit-inner-spin-button,
         input[type="number"]::-webkit-outer-spin-button {
             -webkit-appearance: none;
@@ -23,8 +24,6 @@ el error de "pre-flight" (OPTIONS) de CORS que estaba fallando.
         input[type="number"] {
             -moz-appearance: textfield;
         }
-
-        /* Spinner de carga */
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
@@ -32,20 +31,18 @@ el error de "pre-flight" (OPTIONS) de CORS que estaba fallando.
             border-top-color: transparent;
             animation: spin 1s linear infinite;
         }
-
-        /* Estilos para campos deshabilitados */
         .form-field:disabled {
-            background-color: #f3f4f6; /* bg-gray-100 */
-            color: #9ca3af; /* text-gray-400 */
+            background-color: #f3f4f6;
+            color: #9ca3af;
             cursor: not-allowed;
-            border-color: #d1d5db; /* border-gray-300 */
+            border-color: #d1d5db;
         }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center py-10">
     <div class="w-full max-w-2xl bg-white p-6 sm:p-8 rounded-2xl shadow-xl mx-4">
 
-        <!-- Encabezado (Restaurado v6) -->
+        <!-- Encabezado (v6) - Sin cambios -->
         <div class="mb-6 text-center">
             <h1 class="text-3xl font-bold text-gray-800">Generador de Nomenclatura</h1>
             <p class="text-xl text-gray-700 mt-1">Hospital de 2do. Nivel Isaias</p>
@@ -56,7 +53,7 @@ el error de "pre-flight" (OPTIONS) de CORS que estaba fallando.
         <form id="namingForm" onsubmit="return false;">
             <div class="space-y-4">
 
-                <!-- 0. Clave de Acceso (Movido v6) -->
+                <!-- 0. Clave de Acceso (v6) - Sin cambios -->
                 <div>
                     <label for="claveAcceso" class="block text-sm font-medium text-gray-700 mb-1">
                         Clave de Acceso Personal (Obligatorio)
@@ -70,10 +67,10 @@ el error de "pre-flight" (OPTIONS) de CORS que estaba fallando.
                             Validar
                         </button>
                     </div>
-                    <p id="keyMessage" class="text-sm font-semibold mt-2 h-5"></p> <!-- Mensaje de estado de clave -->
+                    <p id="keyMessage" class="text-sm font-semibold mt-2 h-5"></p>
                 </div>
 
-                <!-- Campos deshabilitados por defecto (v6) -->
+                <!-- fieldset (v6) - Sin cambios -->
                 <fieldset id="formBody" disabled class="space-y-4">
                     
                     <!-- 1. Proyecto -->
@@ -225,14 +222,12 @@ el error de "pre-flight" (OPTIONS) de CORS que estaba fallando.
         document.addEventListener('DOMContentLoaded', () => {
 
             // --- CONEXIÓN AL BACK-END ---
-            // Esta URL se obtiene de la "Implementación" de Google Apps Script
-            const googleAppScriptURL = "https://script.google.com/macros/s/AKfycbxSjEUaROYSueif6pA4bJxnFlxdDF-21y9lG_qYu09J6KtK3WmWdS593plI6sgL_22X8w/exec";
+            const googleAppScriptURL = "https://script.google.com/macros/s/AKfycbxSjEUaROYSueif6pA4bJxnFlxdDF-21y9lG_qYu09J6KtK3WmWdS93plI6sgL_22X8w/exec";
 
             // --- REFERENCIAS A ELEMENTOS ---
             const form = document.getElementById('namingForm');
             const formBody = document.getElementById('formBody');
 
-            // Referencias a todos los elementos interactivos
             const inputs = {
                 proyecto: document.getElementById('proyecto'),
                 originador: document.getElementById('originador'),
@@ -245,7 +240,6 @@ el error de "pre-flight" (OPTIONS) de CORS que estaba fallando.
                 subespecialidad: document.getElementById('subespecialidad'),
             };
             
-            // Campos de seguridad y UI
             const claveAccesoInput = document.getElementById('claveAcceso');
             const validateKeyButton = document.getElementById('validateKeyButton');
             const keyMessage = document.getElementById('keyMessage');
@@ -260,10 +254,10 @@ el error de "pre-flight" (OPTIONS) de CORS que estaba fallando.
             const registerMessage = document.getElementById('registerMessage');
             const clearButton = document.getElementById('clearButton');
 
-            let nombreUsuarioValidado = ""; // Almacena el nombre del usuario validado
+            // Esta variable global es la clave de la v12
+            let nombreUsuarioValidado = ""; 
 
             // --- LÓGICA DE VALIDACIÓN DE CLAVE (v6) ---
-
             const validateKey = async () => {
                 const clave = claveAccesoInput.value;
                 if (!clave) {
@@ -272,39 +266,32 @@ el error de "pre-flight" (OPTIONS) de CORS que estaba fallando.
                     return;
                 }
 
-                // Mostrar estado de carga
                 validateKeyButton.disabled = true;
                 validateKeyButton.innerText = "Validando...";
                 keyMessage.innerText = "Conectando con el servidor...";
                 keyMessage.className = "text-sm font-semibold mt-2 h-5 text-gray-500";
 
                 try {
-                    // Construir la URL con el parámetro GET
                     const validationURL = new URL(googleAppScriptURL);
                     validationURL.searchParams.append('clave', clave);
 
-                    // Realizar la solicitud GET
                     const response = await fetch(validationURL, {
                         method: 'GET',
                         mode: 'cors'
                     });
 
-                    if (!response.ok) {
-                        throw new Error(`Error de red: ${response.statusText}`);
-                    }
+                    if (!response.ok) throw new Error(`Error de red: ${response.statusText}`);
 
                     const result = await response.json();
 
                     if (result.status === 'success') {
-                        // ¡ÉXITO!
-                        keyMessage.innerText = result.message; // "Bienvenido, Zacarías Ortega."
+                        keyMessage.innerText = result.message; 
                         keyMessage.className = "text-sm font-semibold mt-2 h-5 text-green-600";
-                        nombreUsuarioValidado = result.nombreUsuario;
                         
-                        // Desbloquear el formulario
+                        // ¡CLAVE v12! Almacenamos el nombre del usuario
+                        nombreUsuarioValidado = result.nombreUsuario; 
+                        
                         formBody.disabled = false;
-                        
-                        // Bloquear el campo de clave (para evitar cambios)
                         claveAccesoInput.disabled = true;
                         validateKeyButton.disabled = true;
                         validateKeyButton.innerText = "Validado";
@@ -312,8 +299,7 @@ el error de "pre-flight" (OPTIONS) de CORS que estaba fallando.
                         validateKeyButton.classList.remove('bg-[#ff9e3d]', 'hover:bg-[#e08c34]');
 
                     } else {
-                        // Clave no válida
-                        throw new Error(result.message); // "Clave de Acceso no válida."
+                        throw new Error(result.message);
                     }
 
                 } catch (error) {
@@ -325,9 +311,7 @@ el error de "pre-flight" (OPTIONS) de CORS que estaba fallando.
                 }
             };
             
-            // Evento para el botón de validar
             validateKeyButton.addEventListener('click', validateKey);
-            // Opcional: validar al presionar Enter en el campo de clave
             claveAccesoInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
                     validateKey();
@@ -337,16 +321,10 @@ el error de "pre-flight" (OPTIONS) de CORS que estaba fallando.
 
             // --- LÓGICA PRINCIPAL DEL FORMULARIO ---
 
-            /**
-             * Función para validar si todos los campos requeridos están completos.
-             */
             const isFormValid = () => {
-                // El formulario solo es válido si la clave ya fue validada
-                if (!nombreUsuarioValidado) {
-                    return false;
-                }
+                // v12: La clave se valida por 'nombreUsuarioValidado'
+                if (!nombreUsuarioValidado) return false; 
 
-                // Campos estándar
                 const numValid = inputs.numero.value && parseInt(inputs.numero.value, 10) > 0;
                 const revNumValid = inputs.revisionNumero.value && parseInt(inputs.revisionNumero.value, 10) > 0;
                 const fechaValid = inputs.fecha.value !== "";
@@ -355,22 +333,15 @@ el error de "pre-flight" (OPTIONS) de CORS que estaba fallando.
                 return allSelected && numValid && fechaValid && revNumValid;
             };
 
-            /**
-             * Función para construir el nombre de archivo y actualizar la UI.
-             */
             const updateUI = () => {
-                // 1. Validar campos numéricos
+                // ... (código idéntico a v11 para construir el nombre) ...
                 const numValue = inputs.numero.value;
                 const numValid = numValue && parseInt(numValue, 10) > 0;
-
                 const revNumValue = inputs.revisionNumero.value;
                 const revNumValid = revNumValue && parseInt(revNumValue, 10) > 0;
-
-                // 2. Formatear fecha (YYYY-MM-DD -> YYYYMMDD)
                 const fechaValue = inputs.fecha.value;
                 const fechaFormateada = fechaValue ? fechaValue.replace(/-/g, '') : 'YYYYMMDD';
 
-                // 3. Construir el nombre de archivo (ID)
                 const nombre = [
                     inputs.proyecto.value,
                     inputs.originador.value || '???',
@@ -385,34 +356,23 @@ el error de "pre-flight" (OPTIONS) de CORS que estaba fallando.
                 
                 const formIsValid = isFormValid();
 
-                // 4. Comprobar validez para cambiar estilos de botones
+                // ... (código idéntico a v11 para estilos de botones) ...
                 if (formIsValid) {
-                    // Activar botón de Copiar
                     copyButton.disabled = false;
                     copyButton.classList.remove('bg-gray-300', 'cursor-not-allowed');
                     copyButton.classList.add('bg-gray-600', 'hover:bg-gray-700');
-                    
-                    // Activar botón de Registrar
                     registerButton.disabled = false;
                     registerButton.classList.remove('bg-orange-200', 'cursor-not-allowed');
                     registerButton.classList.add('bg-[#ff9e3d]', 'hover:bg-[#e08c34]'); 
-
-                    // Resaltar resultado
                     resultadoInput.classList.remove('text-gray-500', 'bg-gray-100');
                     resultadoInput.classList.add('text-black', 'bg-green-50');
-
                 } else {
-                    // Desactivar botón de Copiar
                     copyButton.disabled = true;
                     copyButton.classList.add('bg-gray-300', 'cursor-not-allowed');
                     copyButton.classList.remove('bg-gray-600', 'hover:bg-gray-700');
-                    
-                    // Desactivar botón de Registrar
                     registerButton.disabled = true;
                     registerButton.classList.add('bg-orange-200', 'cursor-not-allowed');
                     registerButton.classList.remove('bg-[#ff9e3d]', 'hover:bg-[#e08c34]'); 
-
-                    // Apagar resultado
                     resultadoInput.classList.add('text-gray-500', 'bg-gray-100');
                     resultadoInput.classList.remove('text-black', 'bg-green-50');
                 }
@@ -420,7 +380,7 @@ el error de "pre-flight" (OPTIONS) de CORS que estaba fallando.
 
             // --- ACCIONES DE BOTONES ---
 
-            // 1. Lógica de COPIAR Nombre
+            // 1. Lógica de COPIAR Nombre (Sin cambios)
             copyButton.addEventListener('click', () => {
                 if (!isFormValid()) return;
                 resultadoInput.select();
@@ -434,29 +394,27 @@ el error de "pre-flight" (OPTIONS) de CORS que estaba fallando.
                         copyMessage.classList.remove('opacity-100');
                         copyMessage.classList.add('opacity-0');
                     }, 2000);
-                } catch (err) {
-                    console.error('Error al copiar: ', err);
-                }
+                } catch (err) { console.error('Error al copiar: ', err); }
                 window.getSelection().removeAllRanges();
             });
 
             // 2. Lógica de REGISTRO en Google Sheets
             const registerData = async () => {
-                // 1. Validar
                 if (!isFormValid()) {
                      alert("Por favor, complete todos los campos obligatorios antes de registrar.");
                     return;
                 }
 
-                // 2. Mostrar estado de carga
                 registerButton.disabled = true;
                 registerButtonText.classList.add('hidden');
                 loadingSpinner.classList.remove('hidden');
                 registerMessage.innerText = "Registrando...";
                 registerMessage.className = "text-sm text-center font-semibold mt-2 h-5 text-gray-500";
 
-
-                // 3. Preparar los datos
+                // --- ¡ACTUALIZACIÓN v12! ---
+                // Preparamos el payload.
+                // Ya NO enviamos 'claveAcceso'.
+                // AHORA enviamos 'nombreRegistrador' (que obtuvimos del doGet).
                 const nombreCompleto = resultadoInput.value;
                 const revisionCompleta = (inputs.revisionTipo.options[inputs.revisionTipo.selectedIndex]?.text || "") + " " + String(inputs.revisionNumero.value).padStart(2, '0');
                 
@@ -470,15 +428,12 @@ el error de "pre-flight" (OPTIONS) de CORS que estaba fallando.
                     revision: revisionCompleta,
                     fecha: inputs.fecha.value,
                     subespecialidad: inputs.subespecialidad.value || "N/A",
-                    claveAcceso: claveAccesoInput.value // Se envía la clave para la validación del doPost
+                    nombreRegistrador: nombreUsuarioValidado // <-- ¡AQUÍ ESTÁ EL CAMBIO!
                 };
+                // --- FIN DE ACTUALIZACIÓN v12 ---
 
-                // 4. Enviar datos al "Puente" de Apps Script
                 try {
-                    // ¡¡¡SOLUCIÓN v11!!!
-                    // Cambiamos el Content-Type a 'text/plain' para evitar
-                    // la solicitud "pre-flight" (OPTIONS) de CORS.
-                    // El Apps Script (v10) puede manejar esto sin cambios.
+                    // (Lógica de 'fetch' de v11, sin cambios)
                     const response = await fetch(googleAppScriptURL, {
                         method: 'POST',
                         mode: 'cors',
@@ -486,18 +441,16 @@ el error de "pre-flight" (OPTIONS) de CORS que estaba fallando.
                         headers: {
                             'Content-Type': 'text/plain;charset=utf-8', 
                         },
-                        body: JSON.stringify(payload) // El cuerpo sigue siendo JSON
+                        body: JSON.stringify(payload)
                     });
 
                     const resultText = await response.text();
-                    const result = JSON.parse(resultText); // Parsear la respuesta de texto
+                    const result = JSON.parse(resultText); 
 
-                    // 5. Manejar respuesta
                     if (result.status === 'success') {
                         registerMessage.innerText = "¡Registrado con éxito!";
                         registerMessage.className = "text-sm text-center font-semibold mt-2 h-5 text-green-600";
                         
-                        // Forzar al usuario a limpiar el formulario
                         alert(`Registro completado como: ${nombreUsuarioValidado}.\nEl formulario se limpiará para un nuevo ingreso.`);
                         clearForm();
 
@@ -506,21 +459,18 @@ el error de "pre-flight" (OPTIONS) de CORS que estaba fallando.
                     }
 
                 } catch (error) {
+                    // ... (Manejo de errores, sin cambios) ...
                     console.error('Error en el registro:', error);
                     let errorMsg = error.message;
-                    // Intento de parsear un error JSON anidado
                     try {
                         const jsonError = JSON.parse(error.message);
-                        if (jsonError && jsonError.message) {
-                            errorMsg = jsonError.message;
-                        }
+                        if (jsonError && jsonError.message) errorMsg = jsonError.message;
                     } catch (e) { /* no era json */ }
                     
                     registerMessage.innerText = `Error: ${errorMsg}`;
                     registerMessage.className = "text-sm text-center font-semibold mt-2 h-5 text-red-600";
                     alert("Error al registrar: " + errorMsg);
 
-                    // Restaurar el botón para que pueda intentarlo de nuevo
                     registerButton.disabled = false;
                     registerButtonText.classList.remove('hidden');
                     loadingSpinner.classList.add('hidden');
@@ -530,19 +480,16 @@ el error de "pre-flight" (OPTIONS) de CORS que estaba fallando.
             registerButton.addEventListener('click', registerData);
 
 
-            // 3. Lógica de LIMPIAR FORMULARIO
+            // 3. Lógica de LIMPIAR FORMULARIO (v11)
             const clearForm = () => {
-                // 1. Resetear el formulario
                 form.reset();
                 
-                // 2. Resetear los colores
                 Object.values(inputs).forEach(input => {
                     if (input.tagName === 'SELECT' || input.type === 'date') {
-                        input.style.color = '#6b7280'; // gray-500
+                        input.style.color = '#6b7280';
                     }
                 });
 
-                // 3. Limpiar mensajes de estado
                 copyMessage.innerText = "";
                 copyMessage.classList.add('opacity-0');
                 registerMessage.innerText = "";
@@ -550,7 +497,6 @@ el error de "pre-flight" (OPTIONS) de CORS que estaba fallando.
                 keyMessage.innerText = "";
                 keyMessage.className = "text-sm font-semibold mt-2 h-5";
 
-                // 4. Bloquear y resetear todo
                 formBody.disabled = true;
                 claveAccesoInput.disabled = false;
                 claveAccesoInput.value = "";
@@ -558,10 +504,12 @@ el error de "pre-flight" (OPTIONS) de CORS que estaba fallando.
                 validateKeyButton.innerText = "Validar";
                 validateKeyButton.classList.add('bg-[#ff9e3d]', 'hover:bg-[#e08c34]');
                 validateKeyButton.classList.remove('bg-green-600', 'hover:bg-green-600');
+                
+                // ¡CLAVE v12! Reseteamos el usuario validado
                 nombreUsuarioValidado = "";
 
-                // 5. Actualizar la UI (botones, etc.)
                 updateUI();
+                claveAccesoInput.focus();
             };
 
             clearButton.addEventListener('click', clearForm);
@@ -570,28 +518,19 @@ el error de "pre-flight" (OPTIONS) de CORS que estaba fallando.
             // --- INICIALIZACIÓN ---
              Object.values(inputs).forEach(input => {
                 if (input.tagName === 'SELECT' || input.type === 'date') {
-                    // Restaurar color de texto en 'change'
                     input.addEventListener('change', () => {
-                        if(input.value) {
-                            input.style.color = '#000000';
-                        } else {
-                            input.style.color = '#6b7280';
-                        }
+                        if(input.value) input.style.color = '#000000';
+                        else input.style.color = '#6b7280';
                     });
                 }
                 
-                // 5. Escuchadores de eventos
                 input.addEventListener('change', updateUI);
                 if (input.type === 'number' || input.type === 'date' || input.type === 'text') {
                     input.addEventListener('keyup', updateUI);
                 }
             });
 
-            // 6. Generar el estado inicial al cargar la página
-            updateUI(); 
-            
-            // 7. Poner el foco en el campo de clave
-            claveAccesoInput.focus();
+            clearForm(); // Limpia y resetea todo al cargar
         });
     </script>
 </body>

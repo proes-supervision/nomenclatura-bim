@@ -173,7 +173,7 @@
 
             <!-- Botón de Copiar Nombre (ID) -->
             <button type="button" id="copyButton"
-                    class="w-full flex justify-center items-center gap-2 px-4 py-3 bg-indigo-300 text-white font-semibold rounded-md shadow-md transition-all duration-200 ease-in-out cursor-not-allowed"
+                    class="w-full flex justify-center items-center gap-2 px-4 py-3 bg-gray-300 text-white font-semibold rounded-md shadow-md transition-all duration-200 ease-in-out cursor-not-allowed"
                     disabled>
                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M7 2a2 2 0 00-2 2v12a2 2 0 002 2h6a2 2 0 002-2V4a2 2 0 00-2-2H7z"></path><path d="M10.5 1.5a1.5 1.5 0 00-3 0V3h3V1.5z"></path></svg>
                 Copiar Nombre de Archivo
@@ -189,7 +189,7 @@
                 </p>
                 
                 <button type="button" id="registerButton"
-                        class="w-full flex justify-center items-center gap-3 px-4 py-3 bg-teal-300 text-white font-bold rounded-md shadow-md transition-all duration-200 ease-in-out cursor-not-allowed"
+                        class="w-full flex justify-center items-center gap-3 px-4 py-3 bg-orange-200 text-white font-bold rounded-md shadow-md transition-all duration-200 ease-in-out cursor-not-allowed"
                         disabled>
                     <!-- Spinner de carga, oculto por defecto -->
                     <div id="loadingSpinner" class="spinner w-5 h-5 border-4 border-t-4 border-white rounded-full hidden"></div>
@@ -198,6 +198,13 @@
                 
                 <!-- Mensaje de estado del registro -->
                 <p id="registerMessage" class="text-sm text-center font-semibold mt-2 h-5"></p>
+
+                <!-- NUEVO Botón de Limpiar -->
+                <button type="button" id="clearButton"
+                        class="w-full flex justify-center items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 font-medium rounded-md shadow-sm transition-all duration-200 ease-in-out hover:bg-gray-300 mt-3">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                    Limpiar Formulario
+                </button>
             </div>
 
         </form>
@@ -237,6 +244,7 @@
             const registerButtonText = document.getElementById('registerButtonText');
             const loadingSpinner = document.getElementById('loadingSpinner');
             const registerMessage = document.getElementById('registerMessage');
+            const clearButton = document.getElementById('clearButton'); // <-- NUEVO BOTÓN LIMPIAR
 
 
             // --- LÓGICA PRINCIPAL ---
@@ -304,13 +312,13 @@
                 if (formIsValid) {
                     // Activar botón de Copiar
                     copyButton.disabled = false;
-                    copyButton.classList.remove('bg-indigo-300', 'cursor-not-allowed');
-                    copyButton.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
+                    copyButton.classList.remove('bg-gray-300', 'cursor-not-allowed');
+                    copyButton.classList.add('bg-gray-600', 'hover:bg-gray-700');
                     
                     // Activar botón de Registrar
                     registerButton.disabled = false;
-                    registerButton.classList.remove('bg-teal-300', 'cursor-not-allowed');
-                    registerButton.classList.add('bg-teal-600', 'hover:bg-teal-700');
+                    registerButton.classList.remove('bg-orange-200', 'cursor-not-allowed');
+                    registerButton.classList.add('bg-[#ff9e3d]', 'hover:bg-[#e08c34]'); // Naranja personalizado
 
                     // Resaltar resultado
                     resultadoInput.classList.remove('text-gray-600', 'bg-gray-200', 'cursor-not-allowed');
@@ -318,13 +326,13 @@
                 } else {
                     // Desactivar botón de Copiar
                     copyButton.disabled = true;
-                    copyButton.classList.add('bg-indigo-300', 'cursor-not-allowed');
-                    copyButton.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
+                    copyButton.classList.add('bg-gray-300', 'cursor-not-allowed');
+                    copyButton.classList.remove('bg-gray-600', 'hover:bg-gray-700');
                     
                     // Desactivar botón de Registrar
                     registerButton.disabled = true;
-                    registerButton.classList.add('bg-teal-300', 'cursor-not-allowed');
-                    registerButton.classList.remove('bg-teal-600', 'hover:bg-teal-700');
+                    registerButton.classList.add('bg-orange-200', 'cursor-not-allowed');
+                    registerButton.classList.remove('bg-[#ff9e3d]', 'hover:bg-[#e08c34]'); // Naranja personalizado
 
                     // Apagar resultado
                     resultadoInput.classList.add('text-gray-600', 'bg-gray-200', 'cursor-not-allowed');
@@ -432,7 +440,32 @@
             });
 
 
-            // 4. Cambiar color del 'select' y 'date' al elegir una opción
+            // 4. Lógica de LIMPIAR FORMULARIO (¡NUEVO!)
+            const clearForm = () => {
+                // 1. Resetear el formulario (esto borra todos los campos)
+                document.getElementById('namingForm').reset();
+                
+                // 2. Resetear los colores de los <select> y <date> al placeholder
+                Object.values(inputs).forEach(input => {
+                    if (input.tagName === 'SELECT' || input.type === 'date') {
+                        input.style.color = '#6b7280'; // gray-500
+                    }
+                });
+
+                // 3. Limpiar mensajes de estado
+                copyMessage.innerText = "";
+                copyMessage.classList.add('opacity-0');
+                registerMessage.innerText = "";
+                registerMessage.className = "text-sm text-center font-semibold mt-2 h-5"; // Resetear color
+
+                // 4. Actualizar la UI (deshabilitar botones, resetear preview)
+                updateUI();
+            };
+
+            clearButton.addEventListener('click', clearForm);
+
+
+            // 5. Cambiar color del 'select' y 'date' al elegir una opción
              Object.values(inputs).forEach(input => {
                 if (input.tagName === 'SELECT' || input.type === 'date') {
                     input.addEventListener('change', (e) => {
@@ -445,12 +478,10 @@
                 }
             });
 
-            // 5. Generar el estado inicial al cargar la página
+            // 6. Generar el estado inicial al cargar la página
             updateUI();
         });
     </script>
 </body>
 </html>
-
-
 

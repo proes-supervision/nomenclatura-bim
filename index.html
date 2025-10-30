@@ -1,14 +1,30 @@
+<!--
+v11 - SOLUCIÓN "FAILED TO FETCH"
+CAMBIO CLAVE: En la función fetch() (aprox. Línea 470), el encabezado
+'Content-Type' se ha cambiado de 'application/json' a 'text/plain'.
+Esto convierte la solicitud en una "solicitud simple" y evita
+el error de "pre-flight" (OPTIONS) de CORS que estaba fallando.
+-->
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Título v1 restaurado -->
-    <title>Generador de Nomenclatura</title>
+    <title>Generador de Nomenclatura HIO (v11)</title>
     <!-- Carga de Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Spinner de carga para el botón de registro */
+        /* Deshabilitar flechas en campos numéricos */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        /* Spinner de carga */
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
@@ -16,194 +32,190 @@
             border-top-color: transparent;
             animation: spin 1s linear infinite;
         }
-        /* Estilo para campos deshabilitados */
-        select:disabled, input:disabled {
+
+        /* Estilos para campos deshabilitados */
+        .form-field:disabled {
             background-color: #f3f4f6; /* bg-gray-100 */
             color: #9ca3af; /* text-gray-400 */
             cursor: not-allowed;
+            border-color: #d1d5db; /* border-gray-300 */
         }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center py-10">
-    <div class="w-full max-w-2xl bg-white p-8 rounded-2xl shadow-xl mx-4">
+    <div class="w-full max-w-2xl bg-white p-6 sm:p-8 rounded-2xl shadow-xl mx-4">
 
-        <!-- Encabezado (Restaurado a v1 como solicitó) -->
+        <!-- Encabezado (Restaurado v6) -->
         <div class="mb-6 text-center">
-            <h1 class="text-3xl font-bold text-gray-800">GENERADOR DE NOMENCLATURA</h1>
-            <p class="text-xl text-gray-700 mt-2">Hospital de 2do. Nivel Isaías - Oruro (HIO)</p>
-            <p class="text-sm text-gray-500 mt-1">Basado en el estándar ISO 19650</p>
+            <h1 class="text-3xl font-bold text-gray-800">Generador de Nomenclatura</h1>
+            <p class="text-xl text-gray-700 mt-1">Hospital de 2do. Nivel Isaias</p>
+            <p class="text-sm text-gray-500 mt-2">Basado en el estándar ISO 19650</p>
         </div>
 
         <!-- Formulario Principal -->
         <form id="namingForm" onsubmit="return false;">
-            <div class="space-y-5">
-                
-                <!-- 0. Clave de Acceso (v6: Sin número de paso) -->
+            <div class="space-y-4">
+
+                <!-- 0. Clave de Acceso (Movido v6) -->
                 <div>
                     <label for="claveAcceso" class="block text-sm font-medium text-gray-700 mb-1">
                         Clave de Acceso Personal (Obligatorio)
                     </label>
                     <div class="flex gap-2">
                         <input type="password" id="claveAcceso" 
-                               placeholder="Ingrese su clave y presione 'Validar'"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400">
-                        <!-- (v6) Botón de Validación de Clave -->
+                               placeholder="Ingrese su clave de usuario autorizada"
+                               class="form-field w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400">
                         <button type="button" id="validateKeyButton" 
-                                class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                                class="px-4 py-2 bg-[#ff9e3d] text-white font-semibold rounded-md shadow-sm hover:bg-[#e08c34] transition-all duration-200">
                             Validar
                         </button>
                     </div>
-                    <!-- (v6) Mensaje de estado de la clave -->
-                    <p id="keyMessage" class="text-sm font-semibold mt-2 h-5"></p>
+                    <p id="keyMessage" class="text-sm font-semibold mt-2 h-5"></p> <!-- Mensaje de estado de clave -->
                 </div>
 
-                <!-- 1. Proyecto (Re-numerado) -->
-                <div>
-                    <label for="proyecto" class="block text-sm font-medium text-gray-700 mb-1">1. Proyecto</label>
-                    <input type="text" id="proyecto" value="HIO" readonly
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none">
-                </div>
-                
-                <!-- 2. Originador (Re-numerado) -->
-                <div>
-                    <label for="originador" class="block text-sm font-medium text-gray-700 mb-1">2. Originador (Obligatorio)</label>
-                    <select id="originador" class="form-select w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" disabled>
-                        <option value="" selected disabled>Seleccione un Originador...</option>
-                        <option value="SUP">SUP - Supervisión (AA - Proes Marconi Souto)</option>
-                        <option value="CON">CON - Contratista (EROBO)</option>
-                        <option value="FIO">FIO - Fiscal de Obra (UPRE)</option>
-                        <option value="FIS">FIS - Fiscal de Seguimiento (GAMO)</option>
-                    </select>
-                </div>
-
-                <!-- 3. Disciplina (Re-numerado) -->
-                <div>
-                    <label for="disciplina" class="block text-sm font-medium text-gray-700 mb-1">3. Disciplina (Obligatorio)</label>
-                    <select id="disciplina" class="form-select w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" disabled>
-                        <option value="" selected disabled>Seleccione una Disciplina...</option>
-                        <option value="GER">GER - Gerencia de Supervisión</option>
-                        <option value="ARQ">ARQ - Arquitectura</option>
-                        <option value="EST">EST - Estructuras</option>
-                        <option value="ELT">ELT - Eléctrica</option>
-                        <option value="HID">HID - Hidrosanitarias</option>
-                        <option value="HVC">HVC - Climatización</option>
-                        <option value="GMD">GMD - Gases Medicinales</option>
-                        <option value="COM">COM - Datos y Comunicaciones</option>
-                        <option value="BIO">BIO - Biomédico</option>
-                        <option value="GNA">GNA - Gas Natural</option>
-                        <option value="SSO">SSO - Seguridad y Salud Ocupacional</option>
-                        <option value="MED">MED - Medio Ambiente</option>
-                        <option value="GCC">GCC - Gestión / Coordinación / Control</option>
-                    </select>
-                </div>
-
-                <!-- 4. Tipo de Documento (Re-numerado) -->
-                <div>
-                    <label for="tipo" class="block text-sm font-medium text-gray-700 mb-1">4. Tipo de Documento (Obligatorio)</label>
-                    <select id="tipo" class="form-select w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" disabled>
-                        <option value="" selected disabled>Seleccione un Tipo de Documento...</option>
-                        <option value="M3D">M3D - Modelo 3D (rvt, ifc, nwd...)</option>
-                        <option value="M2D">M2D - Plano 2D (dwg, pdf...)</option>
-                        <option value="COM">COM - Cómputos Métricos (xls, pdf...)</option>
-                        <option value="INF">INF - Informe (doc, pdf...)</option>
-                        <option value="NOT">NOT - Nota (doc, pdf...)</option>
-                        <option value="ACT">ACT - Acta (doc, pdf...)</option>
-                        <option value="ESP">ESP - Especificación Técnica (doc, pdf...)</option>
-                        <option value="MEM">MEM - Memoria de Cálculo (doc, pdf...)</option>
-                        <option value="PRE">PRE - Presupuesto (xls, zpp...)</option>
-                        <option value="CRN">CRN - Cronograma (mpp, pdf...)</option>
-                        <option value="IMG">IMG - Imagen / Fotografía (png, pdf...)</option>
-                    </select>
-                </div>
-
-                <!-- 5. Número Secuencial (Re-numerado) -->
-                <div>
-                    <label for="numero" class="block text-sm font-medium text-gray-700 mb-1">5. Número Secuencial (Obligatorio)</label>
-                    <input type="number" id="numero" placeholder="Ej: 6" min="1"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400" disabled>
-                    <p class="mt-1 text-xs text-gray-500">
-                        Es el ID único del archivo (ej. 0006). Consulte el Google Sheet para encontrar el siguiente número disponible.
-                    </p>
-                </div>
-
-                <!-- 6. Revisión (Re-numerado) -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">6. Revisión (Obligatorio)</label>
-                    <div class="flex gap-4">
-                        <select id="revisionTipo" class="form-select w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" disabled>
-                            <option value="" selected disabled>Seleccione un Tipo de Revisión...</option>
-                            <option value="P">P - Versión Preliminar</option>
-                            <option value="C">C - Versión para Construcción</option>
-                            <option value="A">A - As-Built</option>
-                        </select>
-                        <input type="number" id="revisionNumero" placeholder="Ej: 1" min="1"
-                               class="w-1/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400" disabled>
+                <!-- Campos deshabilitados por defecto (v6) -->
+                <fieldset id="formBody" disabled class="space-y-4">
+                    
+                    <!-- 1. Proyecto -->
+                    <div>
+                        <label for="proyecto" class="block text-sm font-medium text-gray-700 mb-1">1. Proyecto</label>
+                        <input type="text" id="proyecto" value="HIO" readonly
+                               class="form-field w-full px-3 py-2 bg-gray-200 text-gray-500 border border-gray-300 rounded-md focus:outline-none">
                     </div>
+
+                    <!-- 2. Originador -->
+                    <div>
+                        <label for="originador" class="block text-sm font-medium text-gray-700 mb-1">2. Originador</label>
+                        <select id="originador" class="form-field form-select w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-500">
+                            <option value="" selected disabled>Seleccione un Originador...</option>
+                            <option value="SUP">SUP - SUPERVISION (ZOFRA)</option>
+                            <option value="CON">CON - CONTRATISTA (ESTRELLA)</option>
+                            <option value="FIS">FIS - FISCALIZACION (GAMO)</option>
+                        </select>
+                    </div>
+
+                    <!-- 3. Disciplina -->
+                    <div>
+                        <label for="disciplina" class="block text-sm font-medium text-gray-700 mb-1">3. Disciplina</label>
+                        <select id="disciplina" class="form-field form-select w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-500">
+                            <option value="" selected disabled>Seleccione una Disciplina...</option>
+                            <option value="ARQ">ARQ - ARQUITECTURA</option>
+                            <option value="EST">EST - ESTRUCTURAS</option>
+                            <option value="ELT">ELT - ELECTRICAS</option>
+                            <option value="HID">HID - HIDROSANITARIAS</option>
+                            <option value="MEC">MEC - MECANICAS</option>
+                            <option value="HVC">HVC - CLIMATIZACION</option>
+                            <option value="GCC">GCC - GESTION Y CONTROL</option>
+                        </select>
+                    </div>
+
+                    <!-- 4. Tipo de Documento -->
+                    <div>
+                        <label for="tipo" class="block text-sm font-medium text-gray-700 mb-1">4. Tipo de Documento</label>
+                        <select id="tipo" class="form-field form-select w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-500">
+                            <option value="" selected disabled>Seleccione un Tipo de Documento...</option>
+                            <option value="M3D">M3D - MODELO 3D (RVT, IFC, NWD)</option>
+                            <option value="M2D">M2D - PLANO 2D (CAD, PDF)</option>
+                            <option value="COM">COM - COMPUTOS (XLS, PDF)</option>
+                            <option value="INF">INF - INFORME (DOC, PDF)</option>
+                            <option value="ACT">ACT - ACTA (DOC, PDF)</option>
+                            <option value="ESP">ESP - ESPECIFICACION (DOC, PDF)</option>
+                            <option value="CRN">CRN - CRONOGRAMA (MPP, PDF)</option>
+                        </select>
+                    </div>
+
+                    <!-- 5. Número Secuencial -->
+                    <div>
+                        <label for="numero" class="block text-sm font-medium text-gray-700 mb-1">5. Número Secuencial</label>
+                        <input type="number" id="numero" placeholder="Ej: 6" min="1"
+                               class="form-field w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400">
+                        <p class="mt-1 text-xs text-gray-500">
+                            ID único del archivo (ej. 0006). Consulte el Google Sheet para el siguiente número disponible.
+                        </p>
+                    </div>
+
+                    <!-- 6. Revisión -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">6. Revisión</label>
+                        <div class="flex gap-4">
+                            <!-- Tipo de Revisión -->
+                            <select id="revisionTipo" class="form-field form-select w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-500">
+                                <option value="" selected disabled>Seleccione un Tipo de Revisión...</option>
+                                <option value="VP">VP - VERSION PRELIMINAR</option>
+                                <option value="VC">VC - VERSION PARA CONSTRUCCION</option>
+                                <option value="AB">AB - REVISION AS-BUILT</option>
+                            </select>
+                            <!-- Número de Revisión -->
+                            <input type="number" id="revisionNumero" placeholder="Ej: 1" min="1"
+                                   class="form-field w-1/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400">
+                        </div>
+                    </div>
+
+                    <!-- 7. Fecha -->
+                    <div>
+                        <label for="fecha" class="block text-sm font-medium text-gray-700 mb-1">7. Fecha</label>
+                        <input type="date" id="fecha"
+                               class="form-field w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-500">
+                    </div>
+
+                    <!-- Subespecialidad (Opcional) -->
+                    <div class="pt-2">
+                        <label for="subespecialidad" class="block text-sm font-medium text-gray-700 mb-1">
+                            Subespecialidad (Opcional)
+                        </label>
+                        <input type="text" id="subespecialidad" 
+                               placeholder="Ej: Iluminación, Puesta a Tierra, Cimentaciones..."
+                               class="form-field w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400">
+                        <p class="mt-1 text-xs text-gray-500">
+                            Opcional. Se registrará en el Google Sheet para mayor claridad.
+                        </p>
+                    </div>
+                </fieldset>
+                
+                <!-- Separador -->
+                <div class="border-t border-gray-200 pt-5 space-y-3">
+                    <!-- Vista Previa del Nombre -->
+                    <div>
+                        <label for="resultado" class="block text-sm font-medium text-gray-700 mb-1">Vista Previa del Nombre de Archivo (ID)</label>
+                        <input type="text" id="resultado" readonly
+                               class="w-full px-3 py-3 bg-gray-100 text-gray-500 border border-gray-300 rounded-md focus:outline-none text-lg font-mono tracking-wide">
+                        <p id="copyMessage" class="text-sm text-green-600 font-semibold mt-2 h-5 opacity-0 transition-opacity duration-300">¡Nombre copiado al portapapeles!</p>
+                    </div>
+                    
+                    <!-- Botón de Copiar Nombre (ID) -->
+                    <button type="button" id="copyButton"
+                            class="w-full flex justify-center items-center gap-2 px-4 py-3 bg-gray-300 text-white font-semibold rounded-md shadow-md transition-all duration-200 ease-in-out cursor-not-allowed"
+                            disabled>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M7 2a2 2 0 00-2 2v12a2 2 0 002 2h6a2 2 0 002-2V4a2 2 0 00-2-2H7z"></path><path d="M10.5 1.5a1.5 1.5 0 00-3 0V3h3V1.5z"></path></svg>
+                        Copiar Nombre de Archivo
+                    </button>
+                    
+                    <!-- Botón de Registrar -->
+                    <button type="button" id="registerButton"
+                            class="w-full flex justify-center items-center gap-3 px-4 py-3 bg-orange-200 text-white font-bold rounded-md shadow-md transition-all duration-200 ease-in-out cursor-not-allowed"
+                            disabled>
+                        <!-- Spinner de carga, oculto por defecto -->
+                        <div id="loadingSpinner" class="spinner w-5 h-5 border-4 border-t-4 border-white rounded-full hidden"></div>
+                        <span id="registerButtonText">Registrar en Google Sheet</span>
+                    </button>
+                    
+                    <!-- Mensaje de estado del registro -->
+                    <p id="registerMessage" class="text-sm text-center font-semibold mt-2 h-5"></p>
+
+                    <!-- Botón de Limpiar -->
+                    <button type="button" id="clearButton"
+                            class="w-full flex justify-center items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 font-medium rounded-md shadow-sm transition-all duration-200 ease-in-out hover:bg-gray-300">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                        Limpiar Formulario
+                    </button>
                 </div>
 
-                <!-- 7. Fecha (Re-numerado) -->
-                <div>
-                    <label for="fecha" class="block text-sm font-medium text-gray-700 mb-1">7. Fecha (Obligatorio)</label>
-                    <input type="date" id="fecha"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" disabled>
-                </div>
             </div>
-
-            <!-- (v5) Sección de Metadatos -->
-            <div class="border-t border-gray-200 mt-6 pt-5">
-                <div>
-                    <label for="subespecialidad" class="block text-sm font-medium text-gray-700 mb-1">
-                        Subespecialidad (Opcional)
-                    </label>
-                    <input type="text" id="subespecialidad" 
-                           placeholder="Ej: Iluminación, Puesta a Tierra, Cimentaciones..."
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400" disabled>
-                    <p class="mt-1 text-xs text-gray-500">
-                        Detalle opcional para el registro. No forma parte del nombre del archivo.
-                    </V>
-                </div>
-            </div>
-
-            <!-- (v5) Área de Resultados -->
-            <div class="border-t border-gray-200 mt-6 pt-5">
-                
-                <div>
-                    <label for="resultado" class="block text-sm font-medium text-gray-700 mb-1">Vista Previa del Nombre de Archivo (ID)</label>
-                    <input type="text" id="resultado" readonly
-                           class="w-full px-3 py-3 bg-gray-100 text-gray-500 border border-gray-300 rounded-md focus:outline-none text-lg font-mono tracking-wide">
-                    <p id="copyMessage" class="text-sm text-green-600 font-semibold mt-2 h-5 opacity-0 transition-opacity duration-300">¡Nombre copiado al portapapeles!</p>
-                </div>
-                
-                <button type="button" id="copyButton"
-                        class="w-full flex justify-center items-center gap-2 px-4 py-3 bg-gray-300 text-white font-semibold rounded-md shadow-md transition-all duration-200 ease-in-out cursor-not-allowed mt-4"
-                        disabled>
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M7 2a2 2 0 00-2 2v12a2 2 0 002 2h6a2 2 0 002-2V4a2 2 0 00-2-2H7z"></path><path d="M10.5 1.5a1.5 1.5 0 00-3 0V3h3V1.5z"></path></svg>
-                    Copiar Nombre de Archivo
-                </button>
-                
-                <p class="text-xs text-gray-500 mt-4 mb-2">Paso final: Guarde este nombre en el registro centralizado.</p>
-                
-                <button type="button" id="registerButton"
-                        class="w-full flex justify-center items-center gap-3 px-4 py-3 bg-orange-200 text-white font-bold rounded-md shadow-md transition-all duration-200 ease-in-out cursor-not-allowed"
-                        disabled>
-                    <div id="loadingSpinner" class="spinner w-5 h-5 border-4 border-t-4 border-white rounded-full hidden"></div>
-                    <span id="registerButtonText">Registrar en Google Sheet</span>
-                </button>
-                
-                <p id="registerMessage" class="text-sm text-center font-semibold mt-2 h-5"></p>
-
-                <button type="button" id="clearButton"
-                        class="w-full flex justify-center items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 font-medium rounded-md shadow-sm transition-all duration-200 ease-in-out hover:bg-gray-300 mt-3">
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
-                    Limpiar Formulario
-                </button>
-            </div>
-
         </form>
 
         <!-- Pie de página -->
         <p class="text-center text-xs text-gray-400 mt-8">
-            Herramienta desarrollada por Zacarias Ortega para el Proyecto Hospital de 2do. Nivel Isaías - Oruro.
+            Desarrollado por PROES-SUPERVISION para el Proyecto HIO.
         </p>
 
     </div>
@@ -213,19 +225,16 @@
         document.addEventListener('DOMContentLoaded', () => {
 
             // --- CONEXIÓN AL BACK-END ---
+            // Esta URL se obtiene de la "Implementación" de Google Apps Script
             const googleAppScriptURL = "https://script.google.com/macros/s/AKfycbxSjEUaROYSueif6pA4bJxnFlxdDF-21y9lG_qYu09J6KtK3WmWdS593plI6sgL_22X8w/exec";
 
             // --- REFERENCIAS A ELEMENTOS ---
             const form = document.getElementById('namingForm');
+            const formBody = document.getElementById('formBody');
 
-            // (v6) Separar campos bloqueados de campos de acción
-            const keyInputs = {
-                claveAcceso: document.getElementById('claveAcceso'),
-                validateKeyButton: document.getElementById('validateKeyButton'),
-                keyMessage: document.getElementById('keyMessage')
-            };
-
-            const formInputs = {
+            // Referencias a todos los elementos interactivos
+            const inputs = {
+                proyecto: document.getElementById('proyecto'),
                 originador: document.getElementById('originador'),
                 disciplina: document.getElementById('disciplina'),
                 tipo: document.getElementById('tipo'),
@@ -235,11 +244,12 @@
                 fecha: document.getElementById('fecha'),
                 subespecialidad: document.getElementById('subespecialidad'),
             };
+            
+            // Campos de seguridad y UI
+            const claveAccesoInput = document.getElementById('claveAcceso');
+            const validateKeyButton = document.getElementById('validateKeyButton');
+            const keyMessage = document.getElementById('keyMessage');
 
-            // Referencias a los campos de proyecto (siempre visibles)
-            const proyectoInput = document.getElementById('proyecto');
-
-            // Referencias a resultados y acciones
             const resultadoInput = document.getElementById('resultado');
             const copyButton = document.getElementById('copyButton');
             const copyMessage = document.getElementById('copyMessage');
@@ -249,118 +259,125 @@
             const loadingSpinner = document.getElementById('loadingSpinner');
             const registerMessage = document.getElementById('registerMessage');
             const clearButton = document.getElementById('clearButton');
-            
 
-            // --- LÓGICA DE BLOQUEO (v6) ---
-            
-            /**
-             * Bloquea o desbloquea todos los campos del formulario.
-             * @param {boolean} lock - True para bloquear, False para desbloquear.
-             */
-            const lockForm = (lock) => {
-                Object.values(formInputs).forEach(input => {
-                    input.disabled = lock;
-                });
-                
-                // Los botones de acción siempre deben estar deshabilitados al (re)bloquear
-                if (lock) {
-                    copyButton.disabled = true;
-                    copyButton.classList.add('bg-gray-300', 'cursor-not-allowed');
-                    copyButton.classList.remove('bg-gray-600', 'hover:bg-gray-700');
-                    
-                    registerButton.disabled = true;
-                    registerButton.classList.add('bg-orange-200', 'cursor-not-allowed');
-                    registerButton.classList.remove('bg-[#ff9e3d]', 'hover:bg-[#e08c34]');
-                }
-            };
-            
-            /**
-             * (v6) Valida la clave de acceso contra el Google Apps Script.
-             */
+            let nombreUsuarioValidado = ""; // Almacena el nombre del usuario validado
+
+            // --- LÓGICA DE VALIDACIÓN DE CLAVE (v6) ---
+
             const validateKey = async () => {
-                const claveValue = keyInputs.claveAcceso.value;
-                if (!claveValue) {
-                    keyInputs.keyMessage.innerText = "Debe ingresar una clave.";
-                    keyInputs.keyMessage.className = "text-sm font-semibold mt-2 h-5 text-red-600";
+                const clave = claveAccesoInput.value;
+                if (!clave) {
+                    keyMessage.innerText = "Debe ingresar una clave.";
+                    keyMessage.className = "text-sm font-semibold mt-2 h-5 text-red-600";
                     return;
                 }
-                
-                keyInputs.keyMessage.innerText = "Validando clave...";
-                keyInputs.keyMessage.className = "text-sm font-semibold mt-2 h-5 text-gray-500";
-                keyInputs.validateKeyButton.disabled = true;
+
+                // Mostrar estado de carga
+                validateKeyButton.disabled = true;
+                validateKeyButton.innerText = "Validando...";
+                keyMessage.innerText = "Conectando con el servidor...";
+                keyMessage.className = "text-sm font-semibold mt-2 h-5 text-gray-500";
 
                 try {
-                    // Usamos GET y pasamos la clave como parámetro de URL
-                    const response = await fetch(`${googleAppScriptURL}?clave=${encodeURIComponent(claveValue)}`, {
+                    // Construir la URL con el parámetro GET
+                    const validationURL = new URL(googleAppScriptURL);
+                    validationURL.searchParams.append('clave', clave);
+
+                    // Realizar la solicitud GET
+                    const response = await fetch(validationURL, {
                         method: 'GET',
-                        mode: 'cors',
-                        cache: 'no-cache',
+                        mode: 'cors'
                     });
+
+                    if (!response.ok) {
+                        throw new Error(`Error de red: ${response.statusText}`);
+                    }
 
                     const result = await response.json();
 
                     if (result.status === 'success') {
                         // ¡ÉXITO!
-                        keyInputs.keyMessage.innerText = result.message; // "Bienvenido, Zacarías Ortega."
-                        keyInputs.keyMessage.className = "text-sm font-semibold mt-2 h-5 text-green-600";
-                        keyInputs.claveAcceso.disabled = true; // Bloquear campo de clave
-                        keyInputs.validateKeyButton.disabled = true; // Bloquear botón de validar
-                        lockForm(false); // ¡Desbloquear el resto del formulario!
-                        updateUI(); // Actualizar UI con campos vacíos
+                        keyMessage.innerText = result.message; // "Bienvenido, Zacarías Ortega."
+                        keyMessage.className = "text-sm font-semibold mt-2 h-5 text-green-600";
+                        nombreUsuarioValidado = result.nombreUsuario;
                         
+                        // Desbloquear el formulario
+                        formBody.disabled = false;
+                        
+                        // Bloquear el campo de clave (para evitar cambios)
+                        claveAccesoInput.disabled = true;
+                        validateKeyButton.disabled = true;
+                        validateKeyButton.innerText = "Validado";
+                        validateKeyButton.classList.add('bg-green-600', 'hover:bg-green-600');
+                        validateKeyButton.classList.remove('bg-[#ff9e3d]', 'hover:bg-[#e08c34]');
+
                     } else {
-                        // ERROR (Clave no válida)
-                        throw new Error(result.message);
+                        // Clave no válida
+                        throw new Error(result.message); // "Clave de Acceso no válida."
                     }
+
                 } catch (error) {
-                    console.error('Error de validación:', error);
-                    keyInputs.keyMessage.innerText = error.message || "Error al conectar. Intente de nuevo.";
-                    keyInputs.keyMessage.className = "text-sm font-semibold mt-2 h-5 text-red-600";
-                    keyInputs.validateKeyButton.disabled = false; // Permitir reintento
-                    lockForm(true); // Asegurarse de que el formulario siga bloqueado
+                    console.error('Error al validar clave:', error);
+                    keyMessage.innerText = `Error: ${error.message}`;
+                    keyMessage.className = "text-sm font-semibold mt-2 h-5 text-red-600";
+                    validateKeyButton.disabled = false;
+                    validateKeyButton.innerText = "Validar";
                 }
             };
             
-            keyInputs.validateKeyButton.addEventListener('click', validateKey);
+            // Evento para el botón de validar
+            validateKeyButton.addEventListener('click', validateKey);
             // Opcional: validar al presionar Enter en el campo de clave
-            keyInputs.claveAcceso.addEventListener('keypress', (e) => {
+            claveAccesoInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
                     validateKey();
                 }
             });
 
 
-            // --- LÓGICA PRINCIPAL ---
-            
-            // (v6) isFormValid ahora solo valida los campos de DATOS (la clave ya está validada)
+            // --- LÓGICA PRINCIPAL DEL FORMULARIO ---
+
+            /**
+             * Función para validar si todos los campos requeridos están completos.
+             */
             const isFormValid = () => {
-                const numValid = formInputs.numero.value && parseInt(formInputs.numero.value, 10) > 0;
-                const revNumValid = formInputs.revisionNumero.value && parseInt(formInputs.revisionNumero.value, 10) > 0;
-                const fechaValid = formInputs.fecha.value !== "";
-                const allSelected = formInputs.originador.value && formInputs.disciplina.value && formInputs.tipo.value && formInputs.revisionTipo.value;
-                
-                // La clave ya no se valida aquí, se asume válida si el form está desbloqueado
+                // El formulario solo es válido si la clave ya fue validada
+                if (!nombreUsuarioValidado) {
+                    return false;
+                }
+
+                // Campos estándar
+                const numValid = inputs.numero.value && parseInt(inputs.numero.value, 10) > 0;
+                const revNumValid = inputs.revisionNumero.value && parseInt(inputs.revisionNumero.value, 10) > 0;
+                const fechaValid = inputs.fecha.value !== "";
+                const allSelected = inputs.originador.value && inputs.disciplina.value && inputs.tipo.value && inputs.revisionTipo.value;
+
                 return allSelected && numValid && fechaValid && revNumValid;
             };
 
-            // (v6) updateUI ahora lee de 'formInputs' y 'proyectoInput'
+            /**
+             * Función para construir el nombre de archivo y actualizar la UI.
+             */
             const updateUI = () => {
-                const numValue = formInputs.numero.value;
+                // 1. Validar campos numéricos
+                const numValue = inputs.numero.value;
                 const numValid = numValue && parseInt(numValue, 10) > 0;
 
-                const revNumValue = formInputs.revisionNumero.value;
+                const revNumValue = inputs.revisionNumero.value;
                 const revNumValid = revNumValue && parseInt(revNumValue, 10) > 0;
 
-                const fechaValue = formInputs.fecha.value;
+                // 2. Formatear fecha (YYYY-MM-DD -> YYYYMMDD)
+                const fechaValue = inputs.fecha.value;
                 const fechaFormateada = fechaValue ? fechaValue.replace(/-/g, '') : 'YYYYMMDD';
 
+                // 3. Construir el nombre de archivo (ID)
                 const nombre = [
-                    proyectoInput.value,
-                    formInputs.originador.value || '???',
-                    formInputs.disciplina.value || '???',
-                    formInputs.tipo.value || '???',
+                    inputs.proyecto.value,
+                    inputs.originador.value || '???',
+                    inputs.disciplina.value || '???',
+                    inputs.tipo.value || '???',
                     (numValid ? String(numValue).padStart(4, '0') : '0000'),
-                    (formInputs.revisionTipo.value || 'R?') + (revNumValid ? String(revNumValue).padStart(2, '0') : '??'),
+                    (inputs.revisionTipo.value || 'R?') + (revNumValid ? String(revNumValue).padStart(2, '0') : '??'),
                     fechaFormateada
                 ].join('-'); 
 
@@ -368,6 +385,7 @@
                 
                 const formIsValid = isFormValid();
 
+                // 4. Comprobar validez para cambiar estilos de botones
                 if (formIsValid) {
                     // Activar botón de Copiar
                     copyButton.disabled = false;
@@ -379,18 +397,22 @@
                     registerButton.classList.remove('bg-orange-200', 'cursor-not-allowed');
                     registerButton.classList.add('bg-[#ff9e3d]', 'hover:bg-[#e08c34]'); 
 
+                    // Resaltar resultado
                     resultadoInput.classList.remove('text-gray-500', 'bg-gray-100');
                     resultadoInput.classList.add('text-black', 'bg-green-50');
+
                 } else {
-                    // Desactivar botones de acción (incluso si el formulario está desbloqueado)
+                    // Desactivar botón de Copiar
                     copyButton.disabled = true;
                     copyButton.classList.add('bg-gray-300', 'cursor-not-allowed');
                     copyButton.classList.remove('bg-gray-600', 'hover:bg-gray-700');
                     
+                    // Desactivar botón de Registrar
                     registerButton.disabled = true;
                     registerButton.classList.add('bg-orange-200', 'cursor-not-allowed');
                     registerButton.classList.remove('bg-[#ff9e3d]', 'hover:bg-[#e08c34]'); 
 
+                    // Apagar resultado
                     resultadoInput.classList.add('text-gray-500', 'bg-gray-100');
                     resultadoInput.classList.remove('text-black', 'bg-green-50');
                 }
@@ -398,7 +420,7 @@
 
             // --- ACCIONES DE BOTONES ---
 
-            // (v6) Lógica de COPIAR (sin cambios, pero ahora lee de 'formInputs')
+            // 1. Lógica de COPIAR Nombre
             copyButton.addEventListener('click', () => {
                 if (!isFormValid()) return;
                 resultadoInput.select();
@@ -418,53 +440,65 @@
                 window.getSelection().removeAllRanges();
             });
 
-            // (v6) Lógica de REGISTRO (sin cambios, pero ahora lee de 'formInputs' y 'keyInputs')
+            // 2. Lógica de REGISTRO en Google Sheets
             const registerData = async () => {
+                // 1. Validar
                 if (!isFormValid()) {
                      alert("Por favor, complete todos los campos obligatorios antes de registrar.");
                     return;
                 }
 
+                // 2. Mostrar estado de carga
                 registerButton.disabled = true;
                 registerButtonText.classList.add('hidden');
                 loadingSpinner.classList.remove('hidden');
                 registerMessage.innerText = "Registrando...";
                 registerMessage.className = "text-sm text-center font-semibold mt-2 h-5 text-gray-500";
 
+
+                // 3. Preparar los datos
                 const nombreCompleto = resultadoInput.value;
-                const revisionCompleta = (formInputs.revisionTipo.options[formInputs.revisionTipo.selectedIndex]?.text || "") + " " + String(formInputs.revisionNumero.value).padStart(2, '0');
+                const revisionCompleta = (inputs.revisionTipo.options[inputs.revisionTipo.selectedIndex]?.text || "") + " " + String(inputs.revisionNumero.value).padStart(2, '0');
                 
                 const payload = {
                     nombreCompleto: nombreCompleto,
-                    proyecto: proyectoInput.value,
-                    originador: formInputs.originador.options[formInputs.originador.selectedIndex]?.text || "",
-                    disciplina: formInputs.disciplina.options[formInputs.disciplina.selectedIndex]?.text || "",
-                    tipo: formInputs.tipo.options[formInputs.tipo.selectedIndex]?.text || "",
-                    numero: String(formInputs.numero.value).padStart(4, '0'),
+                    proyecto: inputs.proyecto.value,
+                    originador: inputs.originador.options[inputs.originador.selectedIndex]?.text || "",
+                    disciplina: inputs.disciplina.options[inputs.disciplina.selectedIndex]?.text || "",
+                    tipo: inputs.tipo.options[inputs.tipo.selectedIndex]?.text || "",
+                    numero: String(inputs.numero.value).padStart(4, '0'),
                     revision: revisionCompleta,
-                    fecha: formInputs.fecha.value,
-                    subespecialidad: formInputs.subespecialidad.value || "N/A",
-                    claveAcceso: keyInputs.claveAcceso.value // La clave validada se envía para el registro
+                    fecha: inputs.fecha.value,
+                    subespecialidad: inputs.subespecialidad.value || "N/A",
+                    claveAcceso: claveAccesoInput.value // Se envía la clave para la validación del doPost
                 };
 
+                // 4. Enviar datos al "Puente" de Apps Script
                 try {
+                    // ¡¡¡SOLUCIÓN v11!!!
+                    // Cambiamos el Content-Type a 'text/plain' para evitar
+                    // la solicitud "pre-flight" (OPTIONS) de CORS.
+                    // El Apps Script (v10) puede manejar esto sin cambios.
                     const response = await fetch(googleAppScriptURL, {
                         method: 'POST',
                         mode: 'cors',
                         cache: 'no-cache',
                         headers: {
-                            'Content-Type': 'application/json',
+                            'Content-Type': 'text/plain;charset=utf-8', 
                         },
-                        body: JSON.stringify(payload)
+                        body: JSON.stringify(payload) // El cuerpo sigue siendo JSON
                     });
 
-                    const result = await response.json();
+                    const resultText = await response.text();
+                    const result = JSON.parse(resultText); // Parsear la respuesta de texto
 
+                    // 5. Manejar respuesta
                     if (result.status === 'success') {
-                        registerMessage.innerText = result.message; 
+                        registerMessage.innerText = "¡Registrado con éxito!";
                         registerMessage.className = "text-sm text-center font-semibold mt-2 h-5 text-green-600";
                         
-                        alert(result.message + ". El formulario se reiniciará.");
+                        // Forzar al usuario a limpiar el formulario
+                        alert(`Registro completado como: ${nombreUsuarioValidado}.\nEl formulario se limpiará para un nuevo ingreso.`);
                         clearForm();
 
                     } else {
@@ -473,10 +507,20 @@
 
                 } catch (error) {
                     console.error('Error en el registro:', error);
-                    registerMessage.innerText = `${error.message}`; 
+                    let errorMsg = error.message;
+                    // Intento de parsear un error JSON anidado
+                    try {
+                        const jsonError = JSON.parse(error.message);
+                        if (jsonError && jsonError.message) {
+                            errorMsg = jsonError.message;
+                        }
+                    } catch (e) { /* no era json */ }
+                    
+                    registerMessage.innerText = `Error: ${errorMsg}`;
                     registerMessage.className = "text-sm text-center font-semibold mt-2 h-5 text-red-600";
-                    alert("Error al registrar: " + error.message);
+                    alert("Error al registrar: " + errorMsg);
 
+                    // Restaurar el botón para que pueda intentarlo de nuevo
                     registerButton.disabled = false;
                     registerButtonText.classList.remove('hidden');
                     loadingSpinner.classList.add('hidden');
@@ -485,60 +529,69 @@
 
             registerButton.addEventListener('click', registerData);
 
-            // (v6) Lógica de LIMPIAR (actualizada para RE-BLOQUEAR)
+
+            // 3. Lógica de LIMPIAR FORMULARIO
             const clearForm = () => {
-                form.reset(); // Limpia todos los campos
+                // 1. Resetear el formulario
+                form.reset();
                 
-                // Re-bloquear el formulario
-                lockForm(true); 
-                
-                // Desbloquear los campos de clave
-                keyInputs.claveAcceso.disabled = false;
-                keyInputs.validateKeyButton.disabled = false;
-                keyInputs.keyMessage.innerText = "";
-                keyInputs.keyMessage.className = "text-sm font-semibold mt-2 h-5";
-                
-                // Resetear mensajes
+                // 2. Resetear los colores
+                Object.values(inputs).forEach(input => {
+                    if (input.tagName === 'SELECT' || input.type === 'date') {
+                        input.style.color = '#6b7280'; // gray-500
+                    }
+                });
+
+                // 3. Limpiar mensajes de estado
                 copyMessage.innerText = "";
                 copyMessage.classList.add('opacity-0');
                 registerMessage.innerText = "";
                 registerMessage.className = "text-sm text-center font-semibold mt-2 h-5";
-                
-                // Restaurar colores de 'select' y 'date' (aunque estén deshabilitados)
-                Object.values(formInputs).forEach(input => {
-                    if (input.tagName === 'SELECT' || input.type === 'date') {
-                        input.style.color = '#6b7280';
-                    }
-                });
+                keyMessage.innerText = "";
+                keyMessage.className = "text-sm font-semibold mt-2 h-5";
 
-                // Actualizar UI (mostrará '???' y botones desactivados)
+                // 4. Bloquear y resetear todo
+                formBody.disabled = true;
+                claveAccesoInput.disabled = false;
+                claveAccesoInput.value = "";
+                validateKeyButton.disabled = false;
+                validateKeyButton.innerText = "Validar";
+                validateKeyButton.classList.add('bg-[#ff9e3d]', 'hover:bg-[#e08c34]');
+                validateKeyButton.classList.remove('bg-green-600', 'hover:bg-green-600');
+                nombreUsuarioValidado = "";
+
+                // 5. Actualizar la UI (botones, etc.)
                 updateUI();
             };
 
             clearButton.addEventListener('click', clearForm);
 
+
             // --- INICIALIZACIÓN ---
-            
-            // (v6) Asignar escuchadores solo a los campos de formulario
-            Object.values(formInputs).forEach(input => {
+             Object.values(inputs).forEach(input => {
                 if (input.tagName === 'SELECT' || input.type === 'date') {
-                    input.style.color = '#6b7280'; 
+                    // Restaurar color de texto en 'change'
                     input.addEventListener('change', () => {
                         if(input.value) {
                             input.style.color = '#000000';
+                        } else {
+                            input.style.color = '#6b7280';
                         }
                     });
                 }
                 
+                // 5. Escuchadores de eventos
                 input.addEventListener('change', updateUI);
-                if (input.type === 'number' || input.type === 'text') {
+                if (input.type === 'number' || input.type === 'date' || input.type === 'text') {
                     input.addEventListener('keyup', updateUI);
                 }
             });
 
-            // (v6) Estado inicial de la UI
+            // 6. Generar el estado inicial al cargar la página
             updateUI(); 
-            // El formulario comienza bloqueado por defecto (definido en el HTML)
+            
+            // 7. Poner el foco en el campo de clave
+            claveAccesoInput.focus();
         });
     </script>
 </body>

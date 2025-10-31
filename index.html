@@ -1,21 +1,19 @@
 <!--
-v14 - SOLUCIÓN DE ARQUITECTURA "Failed to fetch" (doGet)
-CAMBIO CLAVE: Se elimina la función `validateKey()` (que usaba GET).
-Se crea una nueva función `handleKeyValidation()` (aprox. Línea 370)
-que usa el método POST y envía un 'action' al script.
-La función `registerData()` también se modifica para enviar un 'action'.
-Esto unifica todas las llamadas bajo el método POST, que sí funciona.
+v15 - SOLUCIÓN VISUAL Y FUNCIONAL
+Esta versión combina la ARQUITECTURA FUNCIONAL v14 (doPost-router)
+con la VISUALIZACIÓN v15 (Encabezados, Clave al inicio, Colores Naranja/Gris).
+Esta debe ser la versión definitiva.
 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador de Nomenclatura HIO (v14)</title>
+    <title>Generador de Nomenclatura HIO (v15)</title>
     <!-- Carga de Tailwind CSS -->
-    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Estilos (spinner, disabled, etc.) - Sin cambios */
+        /* Estilos (spinner, disabled, etc.) */
         input[type="number"]::-webkit-inner-spin-button,
         input[type="number"]::-webkit-outer-spin-button {
             -webkit-appearance: none;
@@ -43,7 +41,7 @@ Esto unifica todas las llamadas bajo el método POST, que sí funciona.
 <body class="bg-gray-100 min-h-screen flex items-center justify-center py-10">
     <div class="w-full max-w-2xl bg-white p-6 sm:p-8 rounded-2xl shadow-xl mx-4">
 
-        <!-- Encabezado (Solicitado en v6) -->
+        <!-- Encabezado (Restaurado como solicitó) -->
         <div class="mb-6 text-center">
             <h1 class="text-3xl font-bold text-gray-800">Generador de Nomenclatura</h1>
             <p class="text-xl text-gray-700 mt-1">Hospital de 2do. Nivel Isaias</p>
@@ -54,9 +52,8 @@ Esto unifica todas las llamadas bajo el método POST, que sí funciona.
         <form id="namingForm" onsubmit="return false;">
             <div classs="space-y-4">
 
-                <!-- 0. Clave de Acceso (v6) -->
+                <!-- 0. Clave de Acceso (Al inicio, sin número) -->
                 <div>
-                    <!-- No tiene número -->
                     <label for="claveAcceso" class="block text-sm font-medium text-gray-700 mb-1">
                         Clave de Acceso Personal (Obligatorio)
                     </label>
@@ -72,7 +69,7 @@ Esto unifica todas las llamadas bajo el método POST, que sí funciona.
                     <p id="keyMessage" class="text-sm font-semibold mt-2 h-5"></p>
                 </div>
 
-                <!-- fieldset (v6) - Cuerpo del formulario, deshabilitado por defecto -->
+                <!-- fieldset (Cuerpo del formulario, deshabilitado por defecto) -->
                 <fieldset id="formBody" disabled class="space-y-4 mt-4">
                     
                     <!-- 1. Proyecto -->
@@ -171,7 +168,7 @@ Esto unifica todas las llamadas bajo el método POST, que sí funciona.
                     </div>
                 </fieldset>
                 
-                <!-- Separador -->
+                <!-- Separador (Sin títulos extra) -->
                 <div class="border-t border-gray-200 pt-5 space-y-3 mt-4">
                     <!-- Vista Previa del Nombre -->
                     <div>
@@ -185,7 +182,7 @@ Esto unifica todas las llamadas bajo el método POST, que sí funciona.
                     <button type="button" id="copyButton"
                             class="w-full flex justify-center items-center gap-2 px-4 py-3 bg-gray-300 text-white font-semibold rounded-md shadow-md transition-all duration-200 ease-in-out cursor-not-allowed"
                             disabled>
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)"><path d="M7 2a2 2 0 00-2 2v12a2 2 0 002 2h6a2 2 0 002-2V4a2 2 0 00-2-2H7z"></path><path d="M10.5 1.5a1.5 1.5 0 00-3 0V3h3V1.5z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M7 2a2 2 0 00-2 2v12a2 2 0 002 2h6a2 2 0 002-2V4a2 2 0 00-2-2H7z"></path><path d="M10.5 1.5a1.5 1.5 0 00-3 0V3h3V1.5z"></path></svg>
                         Copiar Nombre de Archivo
                     </button>
                     
@@ -206,7 +203,7 @@ Esto unifica todas las llamadas bajo el método POST, que sí funciona.
                     <!-- Botón de Limpiar -->
                     <button type="button" id="clearButton"
                             class="w-full flex justify-center items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 font-medium rounded-md shadow-sm transition-all duration-200 ease-in-out hover:bg-gray-300 mt-3">
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
                         Limpiar Formulario
                     </button>
                 </div>
@@ -346,7 +343,7 @@ Esto unifica todas las llamadas bajo el método POST, que sí funciona.
             // --- ACCIONES DE BOTONES ---
 
             /**
-             * ¡NUEVA FUNCIÓN v14!
+             * ¡FUNCIÓN v14!
              * Valida la clave usando POST
              */
             const handleKeyValidation = async () => {
@@ -365,9 +362,12 @@ Esto unifica todas las llamadas bajo el método POST, que sí funciona.
                 try {
                     const response = await fetch(googleAppScriptURL, {
                         method: 'POST',
-                        // v15: Volvemos a 'application/json' porque
+                        // v15: Usamos 'application/json' porque
                         // el script v14 (con doOptions) está diseñado para esto.
-                        headers: { 'Content-Type': 'application/json' },
+                        
+                        // v16 (FIX): NO. Volvemos a 'text/plain'. Esto es lo que
+                        // evita el pre-flight 'OPTIONS' que está fallando.
+                        headers: { 'Content-Type': 'text/plain' },
                         body: JSON.stringify({
                             action: "validate", // Le dice al script qué hacer
                             claveAcceso: clave
@@ -442,7 +442,7 @@ Esto unifica todas las llamadas bajo el método POST, que sí funciona.
 
             /**
              * 3. Lógica de REGISTRO en Google Sheets
-             * ¡ACTUALIZADA (v14)!
+             * ¡FUNCIÓN v14!
              */
             const registerData = async () => {
                 // 1. Validar
@@ -479,8 +479,9 @@ Esto unifica todas las llamadas bajo el método POST, que sí funciona.
                 try {
                     const response = await fetch(googleAppScriptURL, {
                         method: 'POST',
-                        // --- ¡EL ARREGLO! ---
-                        headers: { 'Content-Type': 'application/json' },
+                        // --- ¡EL ARREGLO v15! ---
+                        // v16 (FIX): NO. Volvemos a 'text/plain'.
+                        headers: { 'Content-Type': 'text/plain' },
                         body: JSON.stringify({
                             action: "register", // Le dice al script qué hacer
                             payload: payload
@@ -525,7 +526,7 @@ Esto unifica todas las llamadas bajo el método POST, que sí funciona.
 
             /**
              * 4. Lógica de LIMPIAR FORMULARIO
-             * ¡ACTUALIZADA (v14)!
+             * ¡FUNCIÓN v14!
              */
             const clearForm = (limpiarClave = true) => {
                 
@@ -593,3 +594,4 @@ Esto unifica todas las llamadas bajo el método POST, que sí funciona.
     </script>
 </body>
 </html>
+

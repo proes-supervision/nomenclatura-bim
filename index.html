@@ -1,19 +1,19 @@
 <!--
-v12 - SOLUCIÓN DE CONGELAMIENTO
-CAMBIO CLAVE: La función registerData() (aprox. Línea 450)
-ha sido modificada.
-1. Ya NO envía 'claveAcceso' en el payload.
-2. Ahora envía 'nombreRegistrador' (que obtuvo del doGet) en el payload.
-Esto soluciona el error que está viendo.
+v14 - SOLUCIÓN DE ARQUITECTURA "Failed to fetch" (doGet)
+CAMBIO CLAVE: Se elimina la función `validateKey()` (que usaba GET).
+Se crea una nueva función `handleKeyValidation()` (aprox. Línea 370)
+que usa el método POST y envía un 'action' al script.
+La función `registerData()` también se modifica para enviar un 'action'.
+Esto unifica todas las llamadas bajo el método POST, que sí funciona.
 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador de Nomenclatura HIO (v12)</title>
+    <title>Generador de Nomenclatura HIO (v14)</title>
     <!-- Carga de Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
     <style>
         /* Estilos (spinner, disabled, etc.) - Sin cambios */
         input[type="number"]::-webkit-inner-spin-button,
@@ -31,18 +31,19 @@ Esto soluciona el error que está viendo.
             border-top-color: transparent;
             animation: spin 1s linear infinite;
         }
+        /* Estilo para campos deshabilitados */
         .form-field:disabled {
-            background-color: #f3f4f6;
-            color: #9ca3af;
+            background-color: #f3f4f6; /* bg-gray-100 */
+            color: #9ca3af; /* text-gray-400 */
             cursor: not-allowed;
-            border-color: #d1d5db;
+            border-color: #d1d5db; /* border-gray-300 */
         }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center py-10">
     <div class="w-full max-w-2xl bg-white p-6 sm:p-8 rounded-2xl shadow-xl mx-4">
 
-        <!-- Encabezado (v6) - Sin cambios -->
+        <!-- Encabezado (Solicitado en v6) -->
         <div class="mb-6 text-center">
             <h1 class="text-3xl font-bold text-gray-800">Generador de Nomenclatura</h1>
             <p class="text-xl text-gray-700 mt-1">Hospital de 2do. Nivel Isaias</p>
@@ -51,10 +52,11 @@ Esto soluciona el error que está viendo.
 
         <!-- Formulario Principal -->
         <form id="namingForm" onsubmit="return false;">
-            <div class="space-y-4">
+            <div classs="space-y-4">
 
-                <!-- 0. Clave de Acceso (v6) - Sin cambios -->
+                <!-- 0. Clave de Acceso (v6) -->
                 <div>
+                    <!-- No tiene número -->
                     <label for="claveAcceso" class="block text-sm font-medium text-gray-700 mb-1">
                         Clave de Acceso Personal (Obligatorio)
                     </label>
@@ -70,8 +72,8 @@ Esto soluciona el error que está viendo.
                     <p id="keyMessage" class="text-sm font-semibold mt-2 h-5"></p>
                 </div>
 
-                <!-- fieldset (v6) - Sin cambios -->
-                <fieldset id="formBody" disabled class="space-y-4">
+                <!-- fieldset (v6) - Cuerpo del formulario, deshabilitado por defecto -->
+                <fieldset id="formBody" disabled class="space-y-4 mt-4">
                     
                     <!-- 1. Proyecto -->
                     <div>
@@ -170,7 +172,7 @@ Esto soluciona el error que está viendo.
                 </fieldset>
                 
                 <!-- Separador -->
-                <div class="border-t border-gray-200 pt-5 space-y-3">
+                <div class="border-t border-gray-200 pt-5 space-y-3 mt-4">
                     <!-- Vista Previa del Nombre -->
                     <div>
                         <label for="resultado" class="block text-sm font-medium text-gray-700 mb-1">Vista Previa del Nombre de Archivo (ID)</label>
@@ -183,11 +185,13 @@ Esto soluciona el error que está viendo.
                     <button type="button" id="copyButton"
                             class="w-full flex justify-center items-center gap-2 px-4 py-3 bg-gray-300 text-white font-semibold rounded-md shadow-md transition-all duration-200 ease-in-out cursor-not-allowed"
                             disabled>
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M7 2a2 2 0 00-2 2v12a2 2 0 002 2h6a2 2 0 002-2V4a2 2 0 00-2-2H7z"></path><path d="M10.5 1.5a1.5 1.5 0 00-3 0V3h3V1.5z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)"><path d="M7 2a2 2 0 00-2 2v12a2 2 0 002 2h6a2 2 0 002-2V4a2 2 0 00-2-2H7z"></path><path d="M10.5 1.5a1.5 1.5 0 00-3 0V3h3V1.5z"></path></svg>
                         Copiar Nombre de Archivo
                     </button>
                     
                     <!-- Botón de Registrar -->
+                    <p class="text-xs text-gray-500 mt-4 mb-2">Paso final: Guarde este nombre en el registro centralizado.</p>
+                    
                     <button type="button" id="registerButton"
                             class="w-full flex justify-center items-center gap-3 px-4 py-3 bg-orange-200 text-white font-bold rounded-md shadow-md transition-all duration-200 ease-in-out cursor-not-allowed"
                             disabled>
@@ -201,8 +205,8 @@ Esto soluciona el error que está viendo.
 
                     <!-- Botón de Limpiar -->
                     <button type="button" id="clearButton"
-                            class="w-full flex justify-center items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 font-medium rounded-md shadow-sm transition-all duration-200 ease-in-out hover:bg-gray-300">
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                            class="w-full flex justify-center items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 font-medium rounded-md shadow-sm transition-all duration-200 ease-in-out hover:bg-gray-300 mt-3">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
                         Limpiar Formulario
                     </button>
                 </div>
@@ -212,7 +216,7 @@ Esto soluciona el error que está viendo.
 
         <!-- Pie de página -->
         <p class="text-center text-xs text-gray-400 mt-8">
-            Desarrollado por PROES-SUPERVISION para el Proyecto HIO.
+            Desarrollado por ZOFRA-ORURO para el Proyecto HIO.
         </p>
 
     </div>
@@ -222,12 +226,18 @@ Esto soluciona el error que está viendo.
         document.addEventListener('DOMContentLoaded', () => {
 
             // --- CONEXIÓN AL BACK-END ---
-            const googleAppScriptURL = "https://script.google.com/macros/s/AKfycbxSjEUaROYSueif6pA4bJxnFlxdDF-21yqlG_qYu09J6KtK3WmWdS593plI6sgL_22X8w/exec";
+            // ¡¡¡ASEGÚRESE DE PEGAR SU URL DE SCRIPT AQUÍ!!!
+            const googleAppScriptURL = "https://script.google.com/macros/s/AKfycbxSjEUaROYSueif6pA4bJxnFlxdDF-21y9lG_qYu09J6KtK3WmWdS593plI6sgL_22X8w/exec";
+
+            // --- ESTADO GLOBAL ---
+            // Guardamos el nombre del usuario validado para enviarlo
+            let nombreUsuarioValidado = null;
 
             // --- REFERENCIAS A ELEMENTOS ---
             const form = document.getElementById('namingForm');
             const formBody = document.getElementById('formBody');
 
+            // Referencias a todos los elementos interactivos
             const inputs = {
                 proyecto: document.getElementById('proyecto'),
                 originador: document.getElementById('originador'),
@@ -239,8 +249,8 @@ Esto soluciona el error que está viendo.
                 fecha: document.getElementById('fecha'),
                 subespecialidad: document.getElementById('subespecialidad'),
             };
-            
-            const claveAccesoInput = document.getElementById('claveAcceso');
+
+            const claveInput = document.getElementById('claveAcceso');
             const validateKeyButton = document.getElementById('validateKeyButton');
             const keyMessage = document.getElementById('keyMessage');
 
@@ -254,94 +264,38 @@ Esto soluciona el error que está viendo.
             const registerMessage = document.getElementById('registerMessage');
             const clearButton = document.getElementById('clearButton');
 
-            // Esta variable global es la clave de la v12
-            let nombreUsuarioValidado = ""; 
+            // --- LÓGICA PRINCIPAL ---
 
-            // --- LÓGICA DE VALIDACIÓN DE CLAVE (v6) ---
-            const validateKey = async () => {
-                const clave = claveAccesoInput.value;
-                if (!clave) {
-                    keyMessage.innerText = "Debe ingresar una clave.";
-                    keyMessage.className = "text-sm font-semibold mt-2 h-5 text-red-600";
-                    return;
-                }
-
-                validateKeyButton.disabled = true;
-                validateKeyButton.innerText = "Validando...";
-                keyMessage.innerText = "Conectando con el servidor...";
-                keyMessage.className = "text-sm font-semibold mt-2 h-5 text-gray-500";
-
-                try {
-                    const validationURL = new URL(googleAppScriptURL);
-                    validationURL.searchParams.append('clave', clave);
-
-                    const response = await fetch(validationURL, {
-                        method: 'GET',
-                        mode: 'cors'
-                    });
-
-                    if (!response.ok) throw new Error(`Error de red: ${response.statusText}`);
-
-                    const result = await response.json();
-
-                    if (result.status === 'success') {
-                        keyMessage.innerText = result.message; 
-                        keyMessage.className = "text-sm font-semibold mt-2 h-5 text-green-600";
-                        
-                        // ¡CLAVE v12! Almacenamos el nombre del usuario
-                        nombreUsuarioValidado = result.nombreUsuario; 
-                        
-                        formBody.disabled = false;
-                        claveAccesoInput.disabled = true;
-                        validateKeyButton.disabled = true;
-                        validateKeyButton.innerText = "Validado";
-                        validateKeyButton.classList.add('bg-green-600', 'hover:bg-green-600');
-                        validateKeyButton.classList.remove('bg-[#ff9e3d]', 'hover:bg-[#e08c34]');
-
-                    } else {
-                        throw new Error(result.message);
-                    }
-
-                } catch (error) {
-                    console.error('Error al validar clave:', error);
-                    keyMessage.innerText = `Error: ${error.message}`;
-                    keyMessage.className = "text-sm font-semibold mt-2 h-5 text-red-600";
-                    validateKeyButton.disabled = false;
-                    validateKeyButton.innerText = "Validar";
-                }
-            };
-            
-            validateKeyButton.addEventListener('click', validateKey);
-            claveAccesoInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    validateKey();
-                }
-            });
-
-
-            // --- LÓGICA PRINCIPAL DEL FORMULARIO ---
-
+            /**
+             * Función para validar si el formulario principal (sin clave) está completo.
+             */
             const isFormValid = () => {
-                // v12: La clave se valida por 'nombreUsuarioValidado'
-                if (!nombreUsuarioValidado) return false; 
-
+                // Campos estándar
                 const numValid = inputs.numero.value && parseInt(inputs.numero.value, 10) > 0;
                 const revNumValid = inputs.revisionNumero.value && parseInt(inputs.revisionNumero.value, 10) > 0;
                 const fechaValid = inputs.fecha.value !== "";
                 const allSelected = inputs.originador.value && inputs.disciplina.value && inputs.tipo.value && inputs.revisionTipo.value;
 
-                return allSelected && numValid && fechaValid && revNumValid;
+                // La clave y el nombre se validaron por separado.
+                return allSelected && numValid && fechaValid && revNumValid && (nombreUsuarioValidado != null);
             };
 
+            /**
+             * Función para construir el nombre de archivo y actualizar la UI.
+             */
             const updateUI = () => {
-                // ... (código idéntico a v11 para construir el nombre) ...
+                // 1. Validar campos numéricos
                 const numValue = inputs.numero.value;
                 const numValid = numValue && parseInt(numValue, 10) > 0;
+
                 const revNumValue = inputs.revisionNumero.value;
                 const revNumValid = revNumValue && parseInt(revNumValue, 10) > 0;
+
+                // 2. Formatear fecha (YYYY-MM-DD -> YYYYMMDD)
                 const fechaValue = inputs.fecha.value;
                 const fechaFormateada = fechaValue ? fechaValue.replace(/-/g, '') : 'YYYYMMDD';
 
+                // 3. Construir el nombre de archivo (ID)
                 const nombre = [
                     inputs.proyecto.value,
                     inputs.originador.value || '???',
@@ -356,23 +310,34 @@ Esto soluciona el error que está viendo.
                 
                 const formIsValid = isFormValid();
 
-                // ... (código idéntico a v11 para estilos de botones) ...
+                // 4. Comprobar validez para cambiar estilos de botones
                 if (formIsValid) {
+                    // Activar botón de Copiar
                     copyButton.disabled = false;
                     copyButton.classList.remove('bg-gray-300', 'cursor-not-allowed');
                     copyButton.classList.add('bg-gray-600', 'hover:bg-gray-700');
+                    
+                    // Activar botón de Registrar
                     registerButton.disabled = false;
                     registerButton.classList.remove('bg-orange-200', 'cursor-not-allowed');
                     registerButton.classList.add('bg-[#ff9e3d]', 'hover:bg-[#e08c34]'); 
+
+                    // Resaltar resultado
                     resultadoInput.classList.remove('text-gray-500', 'bg-gray-100');
                     resultadoInput.classList.add('text-black', 'bg-green-50');
+
                 } else {
+                    // Desactivar botón de Copiar
                     copyButton.disabled = true;
                     copyButton.classList.add('bg-gray-300', 'cursor-not-allowed');
                     copyButton.classList.remove('bg-gray-600', 'hover:bg-gray-700');
+                    
+                    // Desactivar botón de Registrar
                     registerButton.disabled = true;
                     registerButton.classList.add('bg-orange-200', 'cursor-not-allowed');
                     registerButton.classList.remove('bg-[#ff9e3d]', 'hover:bg-[#e08c34]'); 
+
+                    // Apagar resultado
                     resultadoInput.classList.add('text-gray-500', 'bg-gray-100');
                     resultadoInput.classList.remove('text-black', 'bg-green-50');
                 }
@@ -380,7 +345,82 @@ Esto soluciona el error que está viendo.
 
             // --- ACCIONES DE BOTONES ---
 
-            // 1. Lógica de COPIAR Nombre (Sin cambios)
+            /**
+             * ¡NUEVA FUNCIÓN v14!
+             * Valida la clave usando POST
+             */
+            const handleKeyValidation = async () => {
+                const clave = claveInput.value.trim();
+                if (!clave) {
+                    keyMessage.innerText = "Por favor, ingrese una clave.";
+                    keyMessage.className = "text-sm font-semibold mt-2 h-5 text-red-600";
+                    return;
+                }
+
+                validateKeyButton.disabled = true;
+                validateKeyButton.innerText = "Validando...";
+                keyMessage.innerText = "Validando clave...";
+                keyMessage.className = "text-sm font-semibold mt-2 h-5 text-gray-500";
+                
+                try {
+                    const response = await fetch(googleAppScriptURL, {
+                        method: 'POST',
+                        // v15: Volvemos a 'application/json' porque
+                        // el script v14 (con doOptions) está diseñado para esto.
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: "validate", // Le dice al script qué hacer
+                            claveAcceso: clave
+                        })
+                    });
+
+                    if (!response.ok) {
+                        // Captura errores de red o del servidor (500, etc.)
+                        throw new Error(`Error de red: ${response.statusText}`);
+                    }
+
+                    const result = await response.json();
+
+                    if (result.status === 'success') {
+                        // ¡ÉXITO!
+                        keyMessage.innerText = result.message; // "Bienvenido, Zacarías Ortega."
+                        keyMessage.className = "text-sm font-semibold mt-2 h-5 text-green-600";
+                        nombreUsuarioValidado = result.nombreUsuario; // Guardamos el nombre
+                        
+                        // Desbloquear el formulario
+                        formBody.disabled = false;
+                        claveInput.disabled = true; // Bloquear el campo de clave
+                        validateKeyButton.innerText = "Validado";
+                        validateKeyButton.classList.add("bg-green-600", "hover:bg-green-600", "cursor-not-allowed");
+                        validateKeyButton.classList.remove("bg-[#ff9e3d]", "hover:bg-[#e08c34]");
+                        
+                    } else {
+                        // Error de clave no válida
+                        throw new Error(result.message);
+                    }
+
+                } catch (error) {
+                    console.error('Error en validación:', error);
+                    // Captura el "Failed to fetch" y otros errores
+                    keyMessage.innerText = `Error: ${error.message}`;
+                    keyMessage.className = "text-sm font-semibold mt-2 h-5 text-red-600";
+                    validateKeyButton.disabled = false;
+                    validateKeyButton.innerText = "Validar";
+                    nombreUsuarioValidado = null;
+                }
+            };
+            
+            validateKeyButton.addEventListener('click', handleKeyValidation);
+            // También validar al presionar Enter en el campo de clave
+            claveInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault(); // Evitar que el formulario se envíe
+                    handleKeyValidation();
+                }
+            });
+
+
+            // 2. Lógica de COPIAR Nombre
             copyButton.addEventListener('click', () => {
                 if (!isFormValid()) return;
                 resultadoInput.select();
@@ -394,27 +434,31 @@ Esto soluciona el error que está viendo.
                         copyMessage.classList.remove('opacity-100');
                         copyMessage.classList.add('opacity-0');
                     }, 2000);
-                } catch (err) { console.error('Error al copiar: ', err); }
+                } catch (err) {
+                    console.error('Error al copiar: ', err);
+                }
                 window.getSelection().removeAllRanges();
             });
 
-            // 2. Lógica de REGISTRO en Google Sheets
+            /**
+             * 3. Lógica de REGISTRO en Google Sheets
+             * ¡ACTUALIZADA (v14)!
+             */
             const registerData = async () => {
+                // 1. Validar
                 if (!isFormValid()) {
                      alert("Por favor, complete todos los campos obligatorios antes de registrar.");
                     return;
                 }
 
+                // 2. Mostrar estado de carga
                 registerButton.disabled = true;
                 registerButtonText.classList.add('hidden');
                 loadingSpinner.classList.remove('hidden');
-                registerMessage.innerText = "Registrando...";
+                registerMessage.innerText = `Registrando como ${nombreUsuarioValidado}...`;
                 registerMessage.className = "text-sm text-center font-semibold mt-2 h-5 text-gray-500";
 
-                // --- ¡ACTUALIZACIÓN v12! ---
-                // Preparamos el payload.
-                // Ya NO enviamos 'claveAcceso'.
-                // AHORA enviamos 'nombreRegistrador' (que obtuvimos del doGet).
+                // 3. Preparar los datos
                 const nombreCompleto = resultadoInput.value;
                 const revisionCompleta = (inputs.revisionTipo.options[inputs.revisionTipo.selectedIndex]?.text || "") + " " + String(inputs.revisionNumero.value).padStart(2, '0');
                 
@@ -428,49 +472,48 @@ Esto soluciona el error que está viendo.
                     revision: revisionCompleta,
                     fecha: inputs.fecha.value,
                     subespecialidad: inputs.subespecialidad.value || "N/A",
-                    nombreRegistrador: nombreUsuarioValidado // <-- ¡AQUÍ ESTÁ EL CAMBIO!
+                    nombreRegistrador: nombreUsuarioValidado // v12: Enviamos el nombre validado
                 };
-                // --- FIN DE ACTUALIZACIÓN v12 ---
 
+                // 4. Enviar datos al "Puente" de Apps Script
                 try {
-                    // (Lógica de 'fetch' de v11, sin cambios)
                     const response = await fetch(googleAppScriptURL, {
                         method: 'POST',
-                        mode: 'cors',
-                        cache: 'no-cache',
-                        headers: {
-                            'Content-Type': 'text/plain;charset=utf-8', 
-                        },
-                        body: JSON.stringify(payload)
+                        // --- ¡EL ARREGLO! ---
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: "register", // Le dice al script qué hacer
+                            payload: payload
+                        })
                     });
+                    
+                    if (!response.ok) {
+                        throw new Error(`Error de red: ${response.statusText}`);
+                    }
 
-                    const resultText = await response.text();
-                    const result = JSON.parse(resultText); 
+                    const result = await response.json();
 
+                    // 5. Manejar respuesta
                     if (result.status === 'success') {
-                        registerMessage.innerText = "¡Registrado con éxito!";
+                        registerMessage.innerText = result.message; // "¡Registrado con éxito...!"
                         registerMessage.className = "text-sm text-center font-semibold mt-2 h-5 text-green-600";
                         
-                        alert(`Registro completado como: ${nombreUsuarioValidado}.\nEl formulario se limpiará para un nuevo ingreso.`);
-                        clearForm();
+                        // Forzar al usuario a limpiar el formulario (sin resetear la clave)
+                        alert("Registro completado. El formulario se limpiará para un nuevo ingreso.");
+                        clearForm(false); // false = no limpiar la clave
 
                     } else {
+                        // Si el script devuelve un error (ej. "Hoja no encontrada")
                         throw new Error(result.message);
                     }
 
                 } catch (error) {
-                    // ... (Manejo de errores, sin cambios) ...
                     console.error('Error en el registro:', error);
-                    let errorMsg = error.message;
-                    try {
-                        const jsonError = JSON.parse(error.message);
-                        if (jsonError && jsonError.message) errorMsg = jsonError.message;
-                    } catch (e) { /* no era json */ }
-                    
-                    registerMessage.innerText = `Error: ${errorMsg}`;
+                    registerMessage.innerText = `${error.message}`;
                     registerMessage.className = "text-sm text-center font-semibold mt-2 h-5 text-red-600";
-                    alert("Error al registrar: " + errorMsg);
+                    alert("Error al registrar: " + error.message);
 
+                    // Restaurar el botón para que pueda intentarlo de nuevo
                     registerButton.disabled = false;
                     registerButtonText.classList.remove('hidden');
                     loadingSpinner.classList.add('hidden');
@@ -480,59 +523,73 @@ Esto soluciona el error que está viendo.
             registerButton.addEventListener('click', registerData);
 
 
-            // 3. Lógica de LIMPIAR FORMULARIO (v11)
-            const clearForm = () => {
-                form.reset();
+            /**
+             * 4. Lógica de LIMPIAR FORMULARIO
+             * ¡ACTUALIZADA (v14)!
+             */
+            const clearForm = (limpiarClave = true) => {
                 
+                // 1. Resetear el cuerpo del formulario
+                formBody.reset();
+                
+                if (limpiarClave) {
+                    // Limpieza completa (botón Limpiar)
+                    claveInput.value = "";
+                    claveInput.disabled = false;
+                    validateKeyButton.disabled = false;
+                    validateKeyButton.innerText = "Validar";
+                    validateKeyButton.classList.add("bg-[#ff9e3d]", "hover:bg-[#e08c34]");
+                    validateKeyButton.classList.remove("bg-green-600", "hover:bg-green-600", "cursor-not-allowed");
+                    keyMessage.innerText = "";
+                    keyMessage.className = "text-sm font-semibold mt-2 h-5";
+                    formBody.disabled = true; // Bloquear formulario
+                    nombreUsuarioValidado = null;
+                } else {
+                    // Limpieza post-registro (mantiene la clave)
+                    // No hace nada, solo limpia el formBody
+                }
+
+                // 2. Resetear los colores
                 Object.values(inputs).forEach(input => {
                     if (input.tagName === 'SELECT' || input.type === 'date') {
-                        input.style.color = '#6b7280';
+                        input.style.color = '#6b7280'; // gray-500
                     }
                 });
 
+                // 3. Limpiar mensajes de estado
                 copyMessage.innerText = "";
                 copyMessage.classList.add('opacity-0');
                 registerMessage.innerText = "";
                 registerMessage.className = "text-sm text-center font-semibold mt-2 h-5";
-                keyMessage.innerText = "";
-                keyMessage.className = "text-sm font-semibold mt-2 h-5";
 
-                formBody.disabled = true;
-                claveAccesoInput.disabled = false;
-                claveAccesoInput.value = "";
-                validateKeyButton.disabled = false;
-                validateKeyButton.innerText = "Validar";
-                validateKeyButton.classList.add('bg-[#ff9e3d]', 'hover:bg-[#e08c34]');
-                validateKeyButton.classList.remove('bg-green-600', 'hover:bg-green-600');
-                
-                // ¡CLAVE v12! Reseteamos el usuario validado
-                nombreUsuarioValidado = "";
-
+                // 4. Actualizar la UI
                 updateUI();
-                claveAccesoInput.focus();
             };
 
-            clearButton.addEventListener('click', clearForm);
+            clearButton.addEventListener('click', () => clearForm(true));
 
 
             // --- INICIALIZACIÓN ---
              Object.values(inputs).forEach(input => {
                 if (input.tagName === 'SELECT' || input.type === 'date') {
+                    input.style.color = '#6b7280'; 
                     input.addEventListener('change', () => {
-                        if(input.value) input.style.color = '#000000';
-                        else input.style.color = '#6b7280';
+                        if(input.value) {
+                            input.style.color = '#000000';
+                        }
                     });
                 }
                 
+                // 5. Escuchadores de eventos
                 input.addEventListener('change', updateUI);
-                if (input.type === 'number' || input.type === 'date' || input.type === 'text') {
+                if (input.type === 'number' || input.type === 'text') {
                     input.addEventListener('keyup', updateUI);
                 }
             });
 
-            clearForm(); // Limpia y resetea todo al cargar
+            // 6. Generar el estado inicial al cargar la página
+            updateUI();
         });
     </script>
 </body>
 </html>
-

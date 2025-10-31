@@ -1,15 +1,18 @@
 <!--
-v15 - SOLUCIÓN VISUAL Y FUNCIONAL
-Esta versión combina la ARQUITECTURA FUNCIONAL v14 (doPost-router)
-con la VISUALIZACIÓN v15 (Encabezados, Clave al inicio, Colores Naranja/Gris).
-Esta debe ser la versión definitiva.
+v18 - SOLUCIÓN DEFINITIVA (COMBINA v14 y v15)
+* ARQUITECTURA: Usa la v14 (doPost-router).
+* BUG FIX: Usa el "hack" v15 (headers: 'text/plain') en AMBAS
+  solicitudes fetch (Validar y Registrar).
+* Esto evita el 'Failed to fetch' de 'doGet' (redirección)
+  Y el 'Failed to fetch' de 'doPost' (OPTIONS pre-flight).
+* El script v18 está optimizado para ser rápido y evitar el "congelamiento".
 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador de Nomenclatura HIO (v15)</title>
+    <title>Generador de Nomenclatura HIO (v18)</title>
     <!-- Carga de Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -41,7 +44,7 @@ Esta debe ser la versión definitiva.
 <body class="bg-gray-100 min-h-screen flex items-center justify-center py-10">
     <div class="w-full max-w-2xl bg-white p-6 sm:p-8 rounded-2xl shadow-xl mx-4">
 
-        <!-- Encabezado (Restaurado como solicitó) -->
+        <!-- Encabezado (v15) -->
         <div class="mb-6 text-center">
             <h1 class="text-3xl font-bold text-gray-800">Generador de Nomenclatura</h1>
             <p class="text-xl text-gray-700 mt-1">Hospital de 2do. Nivel Isaias</p>
@@ -52,7 +55,7 @@ Esta debe ser la versión definitiva.
         <form id="namingForm" onsubmit="return false;">
             <div classs="space-y-4">
 
-                <!-- 0. Clave de Acceso (Al inicio, sin número) -->
+                <!-- 0. Clave de Acceso (v15) -->
                 <div>
                     <label for="claveAcceso" class="block text-sm font-medium text-gray-700 mb-1">
                         Clave de Acceso Personal (Obligatorio)
@@ -69,7 +72,7 @@ Esta debe ser la versión definitiva.
                     <p id="keyMessage" class="text-sm font-semibold mt-2 h-5"></p>
                 </div>
 
-                <!-- fieldset (Cuerpo del formulario, deshabilitado por defecto) -->
+                <!-- fieldset (v15 - Cuerpo del formulario, deshabilitado por defecto) -->
                 <fieldset id="formBody" disabled class="space-y-4 mt-4">
                     
                     <!-- 1. Proyecto -->
@@ -168,7 +171,7 @@ Esta debe ser la versión definitiva.
                     </div>
                 </fieldset>
                 
-                <!-- Separador (Sin títulos extra) -->
+                <!-- Separador (v15 - Sin títulos) -->
                 <div class="border-t border-gray-200 pt-5 space-y-3 mt-4">
                     <!-- Vista Previa del Nombre -->
                     <div>
@@ -211,7 +214,7 @@ Esta debe ser la versión definitiva.
             </div>
         </form>
 
-        <!-- Pie de página -->
+        <!-- Pie de página (v15) -->
         <p class="text-center text-xs text-gray-400 mt-8">
             Desarrollado por ZOFRA-ORURO para el Proyecto HIO.
         </p>
@@ -227,14 +230,12 @@ Esta debe ser la versión definitiva.
             const googleAppScriptURL = "https://script.google.com/macros/s/AKfycbxSjEUaROYSueif6pA4bJxnFlxdDF-21y9lG_qYu09J6KtK3WmWdS593plI6sgL_22X8w/exec";
 
             // --- ESTADO GLOBAL ---
-            // Guardamos el nombre del usuario validado para enviarlo
             let nombreUsuarioValidado = null;
 
             // --- REFERENCIAS A ELEMENTOS ---
             const form = document.getElementById('namingForm');
             const formBody = document.getElementById('formBody');
 
-            // Referencias a todos los elementos interactivos
             const inputs = {
                 proyecto: document.getElementById('proyecto'),
                 originador: document.getElementById('originador'),
@@ -263,36 +264,22 @@ Esta debe ser la versión definitiva.
 
             // --- LÓGICA PRINCIPAL ---
 
-            /**
-             * Función para validar si el formulario principal (sin clave) está completo.
-             */
             const isFormValid = () => {
-                // Campos estándar
                 const numValid = inputs.numero.value && parseInt(inputs.numero.value, 10) > 0;
                 const revNumValid = inputs.revisionNumero.value && parseInt(inputs.revisionNumero.value, 10) > 0;
                 const fechaValid = inputs.fecha.value !== "";
                 const allSelected = inputs.originador.value && inputs.disciplina.value && inputs.tipo.value && inputs.revisionTipo.value;
-
-                // La clave y el nombre se validaron por separado.
                 return allSelected && numValid && fechaValid && revNumValid && (nombreUsuarioValidado != null);
             };
 
-            /**
-             * Función para construir el nombre de archivo y actualizar la UI.
-             */
             const updateUI = () => {
-                // 1. Validar campos numéricos
                 const numValue = inputs.numero.value;
                 const numValid = numValue && parseInt(numValue, 10) > 0;
-
                 const revNumValue = inputs.revisionNumero.value;
                 const revNumValid = revNumValue && parseInt(revNumValue, 10) > 0;
-
-                // 2. Formatear fecha (YYYY-MM-DD -> YYYYMMDD)
                 const fechaValue = inputs.fecha.value;
                 const fechaFormateada = fechaValue ? fechaValue.replace(/-/g, '') : 'YYYYMMDD';
 
-                // 3. Construir el nombre de archivo (ID)
                 const nombre = [
                     inputs.proyecto.value,
                     inputs.originador.value || '???',
@@ -307,34 +294,22 @@ Esta debe ser la versión definitiva.
                 
                 const formIsValid = isFormValid();
 
-                // 4. Comprobar validez para cambiar estilos de botones
                 if (formIsValid) {
-                    // Activar botón de Copiar
                     copyButton.disabled = false;
                     copyButton.classList.remove('bg-gray-300', 'cursor-not-allowed');
                     copyButton.classList.add('bg-gray-600', 'hover:bg-gray-700');
-                    
-                    // Activar botón de Registrar
                     registerButton.disabled = false;
                     registerButton.classList.remove('bg-orange-200', 'cursor-not-allowed');
                     registerButton.classList.add('bg-[#ff9e3d]', 'hover:bg-[#e08c34]'); 
-
-                    // Resaltar resultado
                     resultadoInput.classList.remove('text-gray-500', 'bg-gray-100');
                     resultadoInput.classList.add('text-black', 'bg-green-50');
-
                 } else {
-                    // Desactivar botón de Copiar
                     copyButton.disabled = true;
                     copyButton.classList.add('bg-gray-300', 'cursor-not-allowed');
                     copyButton.classList.remove('bg-gray-600', 'hover:bg-gray-700');
-                    
-                    // Desactivar botón de Registrar
                     registerButton.disabled = true;
                     registerButton.classList.add('bg-orange-200', 'cursor-not-allowed');
                     registerButton.classList.remove('bg-[#ff9e3d]', 'hover:bg-[#e08c34]'); 
-
-                    // Apagar resultado
                     resultadoInput.classList.add('text-gray-500', 'bg-gray-100');
                     resultadoInput.classList.remove('text-black', 'bg-green-50');
                 }
@@ -343,8 +318,7 @@ Esta debe ser la versión definitiva.
             // --- ACCIONES DE BOTONES ---
 
             /**
-             * ¡FUNCIÓN v14!
-             * Valida la clave usando POST
+             * v18: Valida la clave usando POST y 'text/plain'
              */
             const handleKeyValidation = async () => {
                 const clave = claveInput.value.trim();
@@ -362,12 +336,10 @@ Esta debe ser la versión definitiva.
                 try {
                     const response = await fetch(googleAppScriptURL, {
                         method: 'POST',
-                        // v15: Usamos 'application/json' porque
-                        // el script v14 (con doOptions) está diseñado para esto.
-                        
-                        // v16 (FIX): NO. Volvemos a 'text/plain'. Esto es lo que
-                        // evita el pre-flight 'OPTIONS' que está fallando.
-                        headers: { 'Content-Type': 'text/plain' },
+                        // ¡EL "HACK" v18!
+                        // Enviamos como 'text/plain' para evitar el 'Failed to fetch' (CORS OPTIONS).
+                        // El script v18 (doPost) sabe cómo parsear esto.
+                        headers: { 'Content-Type': 'text/plain' }, 
                         body: JSON.stringify({
                             action: "validate", // Le dice al script qué hacer
                             claveAcceso: clave
@@ -375,34 +347,29 @@ Esta debe ser la versión definitiva.
                     });
 
                     if (!response.ok) {
-                        // Captura errores de red o del servidor (500, etc.)
                         throw new Error(`Error de red: ${response.statusText}`);
                     }
 
                     const result = await response.json();
 
                     if (result.status === 'success') {
-                        // ¡ÉXITO!
-                        keyMessage.innerText = result.message; // "Bienvenido, Zacarías Ortega."
+                        keyMessage.innerText = result.message; 
                         keyMessage.className = "text-sm font-semibold mt-2 h-5 text-green-600";
-                        nombreUsuarioValidado = result.nombreUsuario; // Guardamos el nombre
+                        nombreUsuarioValidado = result.nombreUsuario; 
                         
-                        // Desbloquear el formulario
                         formBody.disabled = false;
-                        claveInput.disabled = true; // Bloquear el campo de clave
+                        claveInput.disabled = true; 
                         validateKeyButton.innerText = "Validado";
                         validateKeyButton.classList.add("bg-green-600", "hover:bg-green-600", "cursor-not-allowed");
                         validateKeyButton.classList.remove("bg-[#ff9e3d]", "hover:bg-[#e08c34]");
                         
                     } else {
-                        // Error de clave no válida
                         throw new Error(result.message);
                     }
 
                 } catch (error) {
                     console.error('Error en validación:', error);
-                    // Captura el "Failed to fetch" y otros errores
-                    keyMessage.innerText = `Error: ${error.message}`;
+                    keyMessage.innerText = `Error: ${error.message || 'Failed to fetch'}`;
                     keyMessage.className = "text-sm font-semibold mt-2 h-5 text-red-600";
                     validateKeyButton.disabled = false;
                     validateKeyButton.innerText = "Validar";
@@ -411,14 +378,12 @@ Esta debe ser la versión definitiva.
             };
             
             validateKeyButton.addEventListener('click', handleKeyValidation);
-            // También validar al presionar Enter en el campo de clave
             claveInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
-                    e.preventDefault(); // Evitar que el formulario se envíe
+                    e.preventDefault(); 
                     handleKeyValidation();
                 }
             });
-
 
             // 2. Lógica de COPIAR Nombre
             copyButton.addEventListener('click', () => {
@@ -442,23 +407,20 @@ Esta debe ser la versión definitiva.
 
             /**
              * 3. Lógica de REGISTRO en Google Sheets
-             * ¡FUNCIÓN v14!
+             * v18: Usa 'text/plain' para ser consistente.
              */
             const registerData = async () => {
-                // 1. Validar
                 if (!isFormValid()) {
                      alert("Por favor, complete todos los campos obligatorios antes de registrar.");
                     return;
                 }
 
-                // 2. Mostrar estado de carga
                 registerButton.disabled = true;
                 registerButtonText.classList.add('hidden');
                 loadingSpinner.classList.remove('hidden');
                 registerMessage.innerText = `Registrando como ${nombreUsuarioValidado}...`;
                 registerMessage.className = "text-sm text-center font-semibold mt-2 h-5 text-gray-500";
 
-                // 3. Preparar los datos
                 const nombreCompleto = resultadoInput.value;
                 const revisionCompleta = (inputs.revisionTipo.options[inputs.revisionTipo.selectedIndex]?.text || "") + " " + String(inputs.revisionNumero.value).padStart(2, '0');
                 
@@ -472,18 +434,16 @@ Esta debe ser la versión definitiva.
                     revision: revisionCompleta,
                     fecha: inputs.fecha.value,
                     subespecialidad: inputs.subespecialidad.value || "N/A",
-                    nombreRegistrador: nombreUsuarioValidado // v12: Enviamos el nombre validado
+                    nombreRegistrador: nombreUsuarioValidado 
                 };
 
-                // 4. Enviar datos al "Puente" de Apps Script
                 try {
                     const response = await fetch(googleAppScriptURL, {
                         method: 'POST',
-                        // --- ¡EL ARREGLO v15! ---
-                        // v16 (FIX): NO. Volvemos a 'text/plain'.
+                        // ¡EL "HACK" v18!
                         headers: { 'Content-Type': 'text/plain' },
                         body: JSON.stringify({
-                            action: "register", // Le dice al script qué hacer
+                            action: "register", 
                             payload: payload
                         })
                     });
@@ -494,27 +454,23 @@ Esta debe ser la versión definitiva.
 
                     const result = await response.json();
 
-                    // 5. Manejar respuesta
                     if (result.status === 'success') {
-                        registerMessage.innerText = result.message; // "¡Registrado con éxito...!"
+                        registerMessage.innerText = result.message; 
                         registerMessage.className = "text-sm text-center font-semibold mt-2 h-5 text-green-600";
                         
-                        // Forzar al usuario a limpiar el formulario (sin resetear la clave)
                         alert("Registro completado. El formulario se limpiará para un nuevo ingreso.");
                         clearForm(false); // false = no limpiar la clave
 
                     } else {
-                        // Si el script devuelve un error (ej. "Hoja no encontrada")
                         throw new Error(result.message);
                     }
 
                 } catch (error) {
                     console.error('Error en el registro:', error);
-                    registerMessage.innerText = `${error.message}`;
+                    registerMessage.innerText = `Error: ${error.message || 'Failed to fetch'}`;
                     registerMessage.className = "text-sm text-center font-semibold mt-2 h-5 text-red-600";
                     alert("Error al registrar: " + error.message);
 
-                    // Restaurar el botón para que pueda intentarlo de nuevo
                     registerButton.disabled = false;
                     registerButtonText.classList.remove('hidden');
                     loadingSpinner.classList.add('hidden');
@@ -523,18 +479,14 @@ Esta debe ser la versión definitiva.
 
             registerButton.addEventListener('click', registerData);
 
-
             /**
              * 4. Lógica de LIMPIAR FORMULARIO
-             * ¡FUNCIÓN v14!
              */
             const clearForm = (limpiarClave = true) => {
                 
-                // 1. Resetear el cuerpo del formulario
                 formBody.reset();
                 
                 if (limpiarClave) {
-                    // Limpieza completa (botón Limpiar)
                     claveInput.value = "";
                     claveInput.disabled = false;
                     validateKeyButton.disabled = false;
@@ -543,32 +495,25 @@ Esta debe ser la versión definitiva.
                     validateKeyButton.classList.remove("bg-green-600", "hover:bg-green-600", "cursor-not-allowed");
                     keyMessage.innerText = "";
                     keyMessage.className = "text-sm font-semibold mt-2 h-5";
-                    formBody.disabled = true; // Bloquear formulario
+                    formBody.disabled = true; 
                     nombreUsuarioValidado = null;
-                } else {
-                    // Limpieza post-registro (mantiene la clave)
-                    // No hace nada, solo limpia el formBody
                 }
-
-                // 2. Resetear los colores
+                
                 Object.values(inputs).forEach(input => {
                     if (input.tagName === 'SELECT' || input.type === 'date') {
-                        input.style.color = '#6b7280'; // gray-500
+                        input.style.color = '#6b7280';
                     }
                 });
 
-                // 3. Limpiar mensajes de estado
                 copyMessage.innerText = "";
                 copyMessage.classList.add('opacity-0');
                 registerMessage.innerText = "";
                 registerMessage.className = "text-sm text-center font-semibold mt-2 h-5";
 
-                // 4. Actualizar la UI
                 updateUI();
             };
 
             clearButton.addEventListener('click', () => clearForm(true));
-
 
             // --- INICIALIZACIÓN ---
              Object.values(inputs).forEach(input => {
@@ -581,17 +526,14 @@ Esta debe ser la versión definitiva.
                     });
                 }
                 
-                // 5. Escuchadores de eventos
                 input.addEventListener('change', updateUI);
                 if (input.type === 'number' || input.type === 'text') {
                     input.addEventListener('keyup', updateUI);
                 }
             });
 
-            // 6. Generar el estado inicial al cargar la página
             updateUI();
         });
     </script>
 </body>
 </html>
-

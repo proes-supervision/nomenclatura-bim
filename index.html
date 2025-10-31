@@ -1,16 +1,17 @@
 <!--
-v19 - SOLUCIÓN DEFINITIVA (CORRECCIÓN DE BUG)
-* ARREGLO: Se corrige el error 'formBody.reset is not a function'
-  dentro de la función 'clearForm'.
-* Se cambia 'formBody.reset()' (incorrecto) por 'form.reset()' (correcto).
-* La arquitectura v18 (doPost-router, text/plain) se mantiene.
+v21 - SOLUCIÓN DEFINITIVA (LIMPIA)
+* ARQUITECTURA: Usa la v14 (doPost-router).
+* BUG FIX: Vuelve al método limpio (headers: 'application/json')
+  en AMBAS solicitudes fetch (Validar y Registrar).
+* El script v21 (que incluye doOptions Y el header en la respuesta)
+  está diseñado para manejar esta arquitectura limpia.
 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador de Nomenclatura HIO (v19)</title>
+    <title>Generador de Nomenclatura HIO (v21)</title>
     <!-- Carga de Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -316,7 +317,8 @@ v19 - SOLUCIÓN DEFINITIVA (CORRECCIÓN DE BUG)
             // --- ACCIONES DE BOTONES ---
 
             /**
-             * v18: Valida la clave usando POST y 'text/plain'
+             * v21: Valida la clave usando POST y 'application/json'
+             * (El "hack" text/plain se elimina)
              */
             const handleKeyValidation = async () => {
                 const clave = claveInput.value.trim();
@@ -334,8 +336,10 @@ v19 - SOLUCIÓN DEFINITIVA (CORRECCIÓN DE BUG)
                 try {
                     const response = await fetch(googleAppScriptURL, {
                         method: 'POST',
-                        // ¡EL "HACK" v18!
-                        headers: { 'Content-Type': 'text/plain' }, 
+                        // ¡EL ARREGLO v21!
+                        // Volvemos a 'application/json' porque el script v21 (con doOptions)
+                        // está diseñado para manejarlo correctamente.
+                        headers: { 'Content-Type': 'application/json' }, 
                         body: JSON.stringify({
                             action: "validate", // Le dice al script qué hacer
                             claveAcceso: clave
@@ -365,6 +369,7 @@ v19 - SOLUCIÓN DEFINITIVA (CORRECCIÓN DE BUG)
 
                 } catch (error) {
                     console.error('Error en validación:', error);
+                    // Esto capturará el 'Failed to fetch' si el 'doOptions' falla
                     keyMessage.innerText = `Error: ${error.message || 'Failed to fetch'}`;
                     keyMessage.className = "text-sm font-semibold mt-2 h-5 text-red-600";
                     validateKeyButton.disabled = false;
@@ -403,7 +408,7 @@ v19 - SOLUCIÓN DEFINITIVA (CORRECCIÓN DE BUG)
 
             /**
              * 3. Lógica de REGISTRO en Google Sheets
-             * v18: Usa 'text/plain' para ser consistente.
+             * v21: Usa 'application/json'
              */
             const registerData = async () => {
                 if (!isFormValid()) {
@@ -436,8 +441,8 @@ v19 - SOLUCIÓN DEFINITIVA (CORRECCIÓN DE BUG)
                 try {
                     const response = await fetch(googleAppScriptURL, {
                         method: 'POST',
-                        // ¡EL "HACK" v18!
-                        headers: { 'Content-Type': 'text/plain' },
+                        // ¡EL ARREGLO v21!
+                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             action: "register", 
                             payload: payload
@@ -477,16 +482,14 @@ v19 - SOLUCIÓN DEFINITIVA (CORRECCIÓN DE BUG)
 
             /**
              * 4. Lógica de LIMPIAR FORMULARIO
-             * ¡LA CORRECCIÓN v19!
+             * (Arreglo v19)
              */
             const clearForm = (limpiarClave = true) => {
                 
-                // formBody.reset(); // <-- ¡ESTE ERA EL ERROR v18!
-                form.reset();      // <-- ¡ESTA ES LA CORRECCIÓN v19!
+                // formBody.reset(); // <-- ¡ERROR v18!
+                form.reset();      // <-- ¡CORRECCIÓN v19!
                 
                 if (limpiarClave) {
-                    // Limpieza completa (botón Limpiar)
-                    // (La clave no está en el form, hay que limpiarla manualmente)
                     claveInput.value = "";
                     claveInput.disabled = false;
                     validateKeyButton.disabled = false;
@@ -498,8 +501,7 @@ v19 - SOLUCIÓN DEFINITIVA (CORRECCIÓN DE BUG)
                     formBody.disabled = true; 
                     nombreUsuarioValidado = null;
                 } else {
-                    // Limpieza post-registro (mantiene la clave)
-                    // El form.reset() ya limpió el fieldset
+                    // Limpieza post-registro
                 }
                 
                 Object.values(inputs).forEach(input => {
@@ -529,6 +531,7 @@ v19 - SOLUCIÓN DEFINITIVA (CORRECCIÓN DE BUG)
                     });
                 }
                 
+                // Escuchadores de 'change' y 'keyup'
                 input.addEventListener('change', updateUI);
                 if (input.type === 'number' || input.type === 'text') {
                     input.addEventListener('keyup', updateUI);

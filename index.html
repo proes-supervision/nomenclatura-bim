@@ -1,20 +1,18 @@
 <!--
-v18 - SOLUCIÓN DEFINITIVA (COMBINA v14 y v15)
-* ARQUITECTURA: Usa la v14 (doPost-router).
-* BUG FIX: Usa el "hack" v15 (headers: 'text/plain') en AMBAS
-  solicitudes fetch (Validar y Registrar).
-* Esto evita el 'Failed to fetch' de 'doGet' (redirección)
-  Y el 'Failed to fetch' de 'doPost' (OPTIONS pre-flight).
-* El script v18 está optimizado para ser rápido y evitar el "congelamiento".
+v19 - SOLUCIÓN DEFINITIVA (CORRECCIÓN DE BUG)
+* ARREGLO: Se corrige el error 'formBody.reset is not a function'
+  dentro de la función 'clearForm'.
+* Se cambia 'formBody.reset()' (incorrecto) por 'form.reset()' (correcto).
+* La arquitectura v18 (doPost-router, text/plain) se mantiene.
 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador de Nomenclatura HIO (v18)</title>
+    <title>Generador de Nomenclatura HIO (v19)</title>
     <!-- Carga de Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
     <style>
         /* Estilos (spinner, disabled, etc.) */
         input[type="number"]::-webkit-inner-spin-button,
@@ -185,7 +183,7 @@ v18 - SOLUCIÓN DEFINITIVA (COMBINA v14 y v15)
                     <button type="button" id="copyButton"
                             class="w-full flex justify-center items-center gap-2 px-4 py-3 bg-gray-300 text-white font-semibold rounded-md shadow-md transition-all duration-200 ease-in-out cursor-not-allowed"
                             disabled>
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M7 2a2 2 0 00-2 2v12a2 2 0 002 2h6a2 2 0 002-2V4a2 2 0 00-2-2H7z"></path><path d="M10.5 1.5a1.5 1.5 0 00-3 0V3h3V1.5z"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)"><path d="M7 2a2 2 0 00-2 2v12a2 2 0 002 2h6a2 2 0 002-2V4a2 2 0 00-2-2H7z"></path><path d="M10.5 1.5a1.5 1.5 0 00-3 0V3h3V1.5z"></path></svg>
                         Copiar Nombre de Archivo
                     </button>
                     
@@ -206,7 +204,7 @@ v18 - SOLUCIÓN DEFINITIVA (COMBINA v14 y v15)
                     <!-- Botón de Limpiar -->
                     <button type="button" id="clearButton"
                             class="w-full flex justify-center items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 font-medium rounded-md shadow-sm transition-all duration-200 ease-in-out hover:bg-gray-300 mt-3">
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
                         Limpiar Formulario
                     </button>
                 </div>
@@ -337,8 +335,6 @@ v18 - SOLUCIÓN DEFINITIVA (COMBINA v14 y v15)
                     const response = await fetch(googleAppScriptURL, {
                         method: 'POST',
                         // ¡EL "HACK" v18!
-                        // Enviamos como 'text/plain' para evitar el 'Failed to fetch' (CORS OPTIONS).
-                        // El script v18 (doPost) sabe cómo parsear esto.
                         headers: { 'Content-Type': 'text/plain' }, 
                         body: JSON.stringify({
                             action: "validate", // Le dice al script qué hacer
@@ -481,12 +477,16 @@ v18 - SOLUCIÓN DEFINITIVA (COMBINA v14 y v15)
 
             /**
              * 4. Lógica de LIMPIAR FORMULARIO
+             * ¡LA CORRECCIÓN v19!
              */
             const clearForm = (limpiarClave = true) => {
                 
-                formBody.reset();
+                // formBody.reset(); // <-- ¡ESTE ERA EL ERROR v18!
+                form.reset();      // <-- ¡ESTA ES LA CORRECCIÓN v19!
                 
                 if (limpiarClave) {
+                    // Limpieza completa (botón Limpiar)
+                    // (La clave no está en el form, hay que limpiarla manualmente)
                     claveInput.value = "";
                     claveInput.disabled = false;
                     validateKeyButton.disabled = false;
@@ -497,6 +497,9 @@ v18 - SOLUCIÓN DEFINITIVA (COMBINA v14 y v15)
                     keyMessage.className = "text-sm font-semibold mt-2 h-5";
                     formBody.disabled = true; 
                     nombreUsuarioValidado = null;
+                } else {
+                    // Limpieza post-registro (mantiene la clave)
+                    // El form.reset() ya limpió el fieldset
                 }
                 
                 Object.values(inputs).forEach(input => {

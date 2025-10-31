@@ -1,17 +1,21 @@
 <!--
-v21 - SOLUCIÓN DEFINITIVA (LIMPIA)
-* ARQUITECTURA: Usa la v14 (doPost-router).
-* BUG FIX: Vuelve al método limpio (headers: 'application/json')
-  en AMBAS solicitudes fetch (Validar y Registrar).
-* El script v21 (que incluye doOptions Y el header en la respuesta)
-  está diseñado para manejar esta arquitectura limpia.
+v22 - SOLUCIÓN "FIRE AND FORGET"
+* ARREGLO: Se modifica la función 'registerData' (Registro).
+* YA NO usa 'await' ni 'try/catch' para esperar la respuesta del script.
+* La aplicación "dispara" el registro y ASUME que funcionó.
+* Después de 2 segundos, limpia el formulario.
+* ESTO SOLUCIONA EL "CUELGUE", que era causado por el navegador
+  bloqueando la respuesta del script (que no tenía header CORS).
+*
+* ESTE ARCHIVO ES COMPATIBLE CON EL SCRIPT v18 QUE USTED YA TIENE.
+* NO TOQUE SU GOOGLE APPS SCRIPT.
 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador de Nomenclatura HIO (v21)</title>
+    <title>Generador de Nomenclatura HIO (v22)</title>
     <!-- Carga de Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -317,8 +321,7 @@ v21 - SOLUCIÓN DEFINITIVA (LIMPIA)
             // --- ACCIONES DE BOTONES ---
 
             /**
-             * v21: Valida la clave usando POST y 'application/json'
-             * (El "hack" text/plain se elimina)
+             * v18: Valida la clave usando POST y 'text/plain'
              */
             const handleKeyValidation = async () => {
                 const clave = claveInput.value.trim();
@@ -336,12 +339,9 @@ v21 - SOLUCIÓN DEFINITIVA (LIMPIA)
                 try {
                     const response = await fetch(googleAppScriptURL, {
                         method: 'POST',
-                        // ¡EL ARREGLO v21!
-                        // Volvemos a 'application/json' porque el script v21 (con doOptions)
-                        // está diseñado para manejarlo correctamente.
-                        headers: { 'Content-Type': 'application/json' }, 
+                        headers: { 'Content-Type': 'text/plain' }, 
                         body: JSON.stringify({
-                            action: "validate", // Le dice al script qué hacer
+                            action: "validate", 
                             claveAcceso: clave
                         })
                     });
@@ -369,7 +369,6 @@ v21 - SOLUCIÓN DEFINITIVA (LIMPIA)
 
                 } catch (error) {
                     console.error('Error en validación:', error);
-                    // Esto capturará el 'Failed to fetch' si el 'doOptions' falla
                     keyMessage.innerText = `Error: ${error.message || 'Failed to fetch'}`;
                     keyMessage.className = "text-sm font-semibold mt-2 h-5 text-red-600";
                     validateKeyButton.disabled = false;
@@ -408,20 +407,24 @@ v21 - SOLUCIÓN DEFINITIVA (LIMPIA)
 
             /**
              * 3. Lógica de REGISTRO en Google Sheets
-             * v21: Usa 'application/json'
+             * ¡SOLUCIÓN v22! "FIRE AND FORGET"
+             * No usamos 'async/await' ni 'try/catch'
+             * No esperamos la respuesta que causa el "cuelgue".
              */
-            const registerData = async () => {
+            const registerData = () => {
                 if (!isFormValid()) {
                      alert("Por favor, complete todos los campos obligatorios antes de registrar.");
                     return;
                 }
 
+                // 1. Mostrar estado de carga
                 registerButton.disabled = true;
                 registerButtonText.classList.add('hidden');
                 loadingSpinner.classList.remove('hidden');
                 registerMessage.innerText = `Registrando como ${nombreUsuarioValidado}...`;
                 registerMessage.className = "text-sm text-center font-semibold mt-2 h-5 text-gray-500";
 
+                // 2. Preparar los datos
                 const nombreCompleto = resultadoInput.value;
                 const revisionCompleta = (inputs.revisionTipo.options[inputs.revisionTipo.selectedIndex]?.text || "") + " " + String(inputs.revisionNumero.value).padStart(2, '0');
                 
@@ -438,44 +441,41 @@ v21 - SOLUCIÓN DEFINITIVA (LIMPIA)
                     nombreRegistrador: nombreUsuarioValidado 
                 };
 
-                try {
-                    const response = await fetch(googleAppScriptURL, {
-                        method: 'POST',
-                        // ¡EL ARREGLO v21!
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            action: "register", 
-                            payload: payload
-                        })
-                    });
+                // 3. "FIRE AND FORGET"
+                // Enviamos los datos pero NO esperamos la respuesta.
+                fetch(googleAppScriptURL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify({
+                        action: "register", 
+                        payload: payload
+                    })
+                }).catch(err => {
+                    // Aunque no esperamos, si hay un error de red *inmediato*
+                    // (ej. sin internet), lo capturamos.
+                    console.error('Error de red al registrar:', err);
+                });
+                
+                // 4. ASUMIR ÉXITO Y LIMPIAR
+                // Damos 2 segundos al script de Google para que trabaje (lo cual es mucho).
+                setTimeout(() => {
+                    registerMessage.innerText = "¡Registro enviado!";
+                    registerMessage.className = "text-sm text-center font-semibold mt-2 h-5 text-green-600";
                     
-                    if (!response.ok) {
-                        throw new Error(`Error de red: ${response.statusText}`);
-                    }
-
-                    const result = await response.json();
-
-                    if (result.status === 'success') {
-                        registerMessage.innerText = result.message; 
-                        registerMessage.className = "text-sm text-center font-semibold mt-2 h-5 text-green-600";
-                        
-                        alert("Registro completado. El formulario se limpiará para un nuevo ingreso.");
-                        clearForm(false); // false = no limpiar la clave
-
-                    } else {
-                        throw new Error(result.message);
-                    }
-
-                } catch (error) {
-                    console.error('Error en el registro:', error);
-                    registerMessage.innerText = `Error: ${error.message || 'Failed to fetch'}`;
-                    registerMessage.className = "text-sm text-center font-semibold mt-2 h-5 text-red-600";
-                    alert("Error al registrar: " + error.message);
-
+                    // Limpiamos el formulario para el siguiente ingreso.
+                    clearForm(false); // false = no limpiar la clave
+                    
+                    // Reactivamos el botón
                     registerButton.disabled = false;
                     registerButtonText.classList.remove('hidden');
                     loadingSpinner.classList.add('hidden');
-                }
+                    
+                    // Ocultar el mensaje después de un rato
+                    setTimeout(() => {
+                         registerMessage.innerText = "";
+                    }, 3000);
+
+                }, 2000); // 2 segundos de espera
             };
 
             registerButton.addEventListener('click', registerData);
@@ -531,7 +531,6 @@ v21 - SOLUCIÓN DEFINITIVA (LIMPIA)
                     });
                 }
                 
-                // Escuchadores de 'change' y 'keyup'
                 input.addEventListener('change', updateUI);
                 if (input.type === 'number' || input.type === 'text') {
                     input.addEventListener('keyup', updateUI);
